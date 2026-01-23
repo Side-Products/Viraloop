@@ -12,7 +12,7 @@
 		"start": "next start",
 		"prodStart": "next start",
 		"lint": "next lint",
-		"postbuild": "next-sitemap && node src/scripts/generate-sitemap.js",
+		"postbuild": "next-sitemap",
 		"export-video": "remotion render src/remotion/index.js MyVideo renders/out.mp4",
 		"remotion": "remotion studio",
 		"render": "remotion render",
