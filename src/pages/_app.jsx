@@ -1,4 +1,5 @@
 import "@/styles/globals.css";
+import Script from "next/script";
 import { SessionProvider } from "next-auth/react";
 import { Provider } from "react-redux";
 import { wrapper } from "@/redux/redux-store";
@@ -18,6 +19,8 @@ function MyApp({ Component, ...rest }) {
 				<meta name="theme-color" content="#ff4f01" />
 				<link rel="icon" href="/favicon.ico" />
 			</Head>
+
+			<Script data-website-id="dfid_V6vE8sG9i5sRj5gvyQ7Yj" data-domain="viraloop.io" src="/js/script.js" strategy="afterInteractive"></Script>
 
 			<SessionProvider session={pageProps.session}>
 				<TeamContextProvider>
