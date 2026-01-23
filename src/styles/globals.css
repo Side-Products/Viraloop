@@ -1,0 +1,192 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Degular Font */
+@font-face {
+	font-family: "Degular";
+	src: url("/degular-font/DegularDemo-Thin.otf") format("opentype");
+	font-weight: 100;
+	font-style: normal;
+}
+
+@font-face {
+	font-family: "Degular";
+	src: url("/degular-font/DegularDemo-Light.otf") format("opentype");
+	font-weight: 300;
+	font-style: normal;
+}
+
+@font-face {
+	font-family: "Degular";
+	src: url("/degular-font/DegularDemo-Regular.otf") format("opentype");
+	font-weight: 400;
+	font-style: normal;
+}
+
+@font-face {
+	font-family: "Degular";
+	src: url("/degular-font/DegularDemo-Italic.otf") format("opentype");
+	font-weight: 400;
+	font-style: italic;
+}
+
+@font-face {
+	font-family: "Degular";
+	src: url("/degular-font/DegularDemo-Medium.otf") format("opentype");
+	font-weight: 500;
+	font-style: normal;
+}
+
+@font-face {
+	font-family: "Degular";
+	src: url("/degular-font/DegularDemo-Semibold.otf") format("opentype");
+	font-weight: 600;
+	font-style: normal;
+}
+
+@font-face {
+	font-family: "Degular";
+	src: url("/degular-font/DegularDemo-Bold.otf") format("opentype");
+	font-weight: 700;
+	font-style: normal;
+}
+
+@font-face {
+	font-family: "Degular";
+	src: url("/degular-font/DegularDemo-Black.otf") format("opentype");
+	font-weight: 900;
+	font-style: normal;
+}
+
+/* Light mode base styles */
+:root {
+	--background: #ffffff;
+	--foreground: #1f2937;
+	--muted: #6b7280;
+	--primary: #ED6B2F;
+	--primary-hover: #D45A22;
+	--card: #f9fafb;
+	--border: #e5e7eb;
+}
+
+html {
+	overflow-y: scroll;
+	scrollbar-width: none; /* Firefox */
+	-ms-overflow-style: none; /* IE and Edge */
+}
+
+html::-webkit-scrollbar {
+	display: none; /* Chrome, Safari, Opera */
+}
+
+html,
+body {
+	padding: 0;
+	margin: 0;
+	font-family: "Degular", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+	background-color: var(--background);
+	color: var(--foreground);
+}
+
+* {
+	box-sizing: border-box;
+}
+
+a {
+	color: inherit;
+	text-decoration: none;
+}
+
+/* Custom scrollbar for light mode */
+::-webkit-scrollbar {
+	width: 8px;
+	height: 8px;
+}
+
+::-webkit-scrollbar-track {
+	background: #f3f4f6;
+	border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+	background: #d1d5db;
+	border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+	background: #9ca3af;
+}
+
+/* Focus styles */
+*:focus {
+	outline: none;
+}
+
+*:focus-visible {
+	outline: 2px solid var(--primary);
+	outline-offset: 2px;
+}
+
+/* Button base styles */
+.btn {
+	@apply inline-flex items-center justify-center px-4 py-2 text-sm font-medium font-secondary rounded-sm transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2;
+}
+
+.btn-primary {
+	@apply bg-primary-400 text-white hover:bg-primary-700 focus:ring-primary-400 transition-all duration-200;
+}
+
+.btn-secondary {
+	@apply bg-light-200 text-dark-100 hover:bg-light-300 focus:ring-light-400;
+}
+
+.btn-outline {
+	@apply border border-light-300 text-dark-200 hover:text-white hover:bg-neutral-900 focus:ring-primary-400 transition-all duration-200;
+}
+
+/* Card styles */
+.card {
+	@apply bg-light-50 border border-light-300 rounded-xl shadow-sm;
+}
+
+/* Input styles */
+.input {
+	@apply w-full pl-3 pr-3 py-2 bg-light-50 border border-light-300 rounded-lg text-dark-100 placeholder:text-light-500 focus:outline-none focus:ring-2 focus:ring-primary-400 focus:border-transparent;
+}
+
+/* Badge styles */
+.badge {
+	@apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+}
+
+.badge-success {
+	@apply bg-success-100 text-success-700;
+}
+
+.badge-warning {
+	@apply bg-warning-100 text-warning-600;
+}
+
+.badge-error {
+	@apply bg-error-100 text-error-700;
+}
+
+.badge-info {
+	@apply bg-info-100 text-info-600;
+}
+
+/* Loading spinner */
+.spinner {
+	@apply animate-spin h-5 w-5 border-2 border-primary-400 border-t-transparent rounded-full;
+}
+
+/* Transitions */
+.transition-base {
+	@apply transition-all duration-200 ease-in-out;
+}
+
+/* Brand text */
+.gradient-text {
+	@apply text-primary-400;
+}
