@@ -1,0 +1,63 @@
+{
+	"name": "@viraloop/pseo-engine",
+	"version": "1.0.0",
+	"description": "Industry-grade programmatic SEO system for Next.js applications",
+	"main": "index.js",
+	"type": "module",
+	"keywords": [
+		"seo",
+		"programmatic-seo",
+		"nextjs",
+		"sitemap",
+		"metadata",
+		"internal-linking",
+		"json-ld",
+		"structured-data"
+	],
+	"author": {
+		"name": "Pushpit Bhardwaj",
+		"email": "pushpit07@gmail.com"
+	},
+	"license": "MIT",
+	"engines": {
+		"node": ">=18.0.0"
+	},
+	"peerDependencies": {
+		"mongoose": "^6.0.0",
+		"ioredis": "^5.0.0",
+		"openai": "^4.0.0",
+		"next": "^15.0.0",
+		"react": "^19.0.0",
+		"react-dom": "^19.0.0",
+		"framer-motion": "^10.0.0"
+	},
+	"scripts": {
+		"seed": "node scripts/seed-pages.js",
+		"test": "echo \"No tests configured yet\"",
+		"build": "echo \"Build step - add if needed for production\"",
+		"lint": "eslint ."
+	},
+	"exports": {
+		".": "./index.js",
+		"./core/*": "./core/*.js",
+		"./config": "./config.js",
+		"./components/*": "../../components/SEO/*.jsx",
+		"./model": "../../backend/models/seoPage.js"
+	},
+	"files": [
+		"core/",
+		"scripts/",
+		"index.js",
+		"config.js",
+		"README.md",
+		"EXAMPLES.md"
+	],
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/viraloop-io/pseo-engine"
+	},
+	"bugs": {
+		"url": "https://github.com/viraloop-io/pseo-engine/issues"
+	},
+	"homepage": "https://github.com/viraloop-io/pseo-engine#readme"
+}

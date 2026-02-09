@@ -5,12 +5,23 @@ import Link from "next/link";
 import { signIn, getSession } from "next-auth/react";
 import { PRODUCT_NAME } from "@/config/constants";
 import { toast } from "sonner";
+import ScrollingBackground from "@/components/ScrollingBackground";
 
-export const getServerSideProps = async ({ req }) => {
+export const getServerSideProps = async ({ req, query }) => {
 	const session = await getSession({ req });
 	console.log("\n\ngetServerSideProps::", session);
 
 	if (session) {
+		// Check if there's a checkout redirect
+		if (query.redirect === "checkout" && query.priceId) {
+			const checkoutUrl = `/checkout?priceId=${query.priceId}&billing=${query.billing || "monthly"}${query.isOneTime === "true" ? "&isOneTime=true" : ""}`;
+			return {
+				redirect: {
+					destination: checkoutUrl,
+					permanent: false,
+				},
+			};
+		}
 		return {
 			redirect: {
 				destination: "/dashboard",
@@ -37,6 +48,15 @@ export default function Login() {
 	});
 
 	const { name, email, password, confirmPassword } = formData;
+
+	// Build redirect URL based on query params
+	const getRedirectUrl = () => {
+		const { redirect, priceId, billing, isOneTime } = router.query;
+		if (redirect === "checkout" && priceId) {
+			return `/checkout?priceId=${priceId}&billing=${billing || "monthly"}${isOneTime === "true" ? "&isOneTime=true" : ""}`;
+		}
+		return "/dashboard";
+	};
 
 	const onFieldChange = (e) => {
 		setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -99,14 +119,14 @@ export default function Login() {
 				toast.error(result.error);
 				setLoading(false);
 			} else {
-				router.replace("/dashboard");
+				router.replace(getRedirectUrl());
 			}
 		}
 	};
 
 	const handleGoogleSignIn = () => {
 		setLoading(true);
-		signIn("google", { callbackUrl: "/dashboard" });
+		signIn("google", { callbackUrl: getRedirectUrl() });
 	};
 
 	return (
@@ -116,19 +136,24 @@ export default function Login() {
 				<title>Login - {PRODUCT_NAME}</title>
 			</Head>
 
-			<div className="min-h-screen bg-gradient-to-br from-light-50 via-primary-50 to-light-100 flex items-center justify-center p-4 pt-20">
+			<div className="min-h-screen bg-light-50 relative">
+				{/* Scrolling Background Images */}
+				<ScrollingBackground fadeTop={true} fadeBottom={true} />
+
+				{/* Login Form */}
+				<div className="relative z-20 min-h-screen flex items-center justify-center p-4 pt-20">
 				<div className="w-full max-w-md">
 					{/* Header */}
 					<div className="text-center mb-8">
-						<p className="text-dark-400 text-sm">Welcome to your creative space</p>
+						<p className="text-neutral-500 text-sm">Welcome to your creative space</p>
 					</div>
 
 					{/* Main card */}
 					<div className="bg-white border border-light-300 rounded-2xl p-8 shadow-lg">
 						{/* Header */}
 						<div className="text-center mb-6">
-							<h2 className="text-2xl font-semibold text-dark-100 mb-2">{authMode === "signin" ? "Welcome back" : "Create account"}</h2>
-							<p className="text-dark-400 text-sm">
+							<h2 className="text-2xl font-semibold text-neutral-900 mb-2">{authMode === "signin" ? "Welcome back" : "Create account"}</h2>
+							<p className="text-neutral-500 text-sm">
 								{authMode === "signin" ? "Sign in to continue to your projects" : "Join us and start creating viral content"}
 							</p>
 						</div>
@@ -144,7 +169,7 @@ export default function Login() {
 								<button
 									onClick={() => authMode !== "signin" && toggleAuthMode()}
 									className={`py-2.5 text-sm font-medium rounded-lg transition-all duration-200 ${
-										authMode === "signin" ? "text-dark-100" : "text-dark-400 hover:text-dark-200"
+										authMode === "signin" ? "text-neutral-900" : "text-neutral-500 hover:text-neutral-700"
 									}`}
 								>
 									Login
@@ -152,7 +177,7 @@ export default function Login() {
 								<button
 									onClick={() => authMode !== "signup" && toggleAuthMode()}
 									className={`py-2.5 text-sm font-medium rounded-lg transition-all duration-200 ${
-										authMode === "signup" ? "text-dark-100" : "text-dark-400 hover:text-dark-200"
+										authMode === "signup" ? "text-neutral-900" : "text-neutral-500 hover:text-neutral-700"
 									}`}
 								>
 									Sign Up
@@ -164,7 +189,7 @@ export default function Login() {
 						<button
 							onClick={handleGoogleSignIn}
 							disabled={loading}
-							className="w-full flex items-center justify-center gap-3 bg-light-100 hover:bg-light-200 border border-light-300 rounded-xl py-3 text-sm font-medium text-dark-200 transition-all duration-200"
+							className="w-full flex items-center justify-center gap-3 bg-light-100 hover:bg-light-200 border border-light-300 rounded-sm py-3 text-sm font-medium text-neutral-700 transition-all duration-200"
 						>
 							<img src="/google.png" alt="Google" className="w-5 h-5" />
 							Continue with Google
@@ -176,7 +201,7 @@ export default function Login() {
 								<div className="w-full border-t border-light-300"></div>
 							</div>
 							<div className="relative flex justify-center text-xs">
-								<span className="px-4 bg-white text-dark-400">or continue with email</span>
+								<span className="px-4 bg-white text-neutral-500">or continue with email</span>
 							</div>
 						</div>
 
@@ -208,7 +233,7 @@ export default function Login() {
 								/>
 								<button
 									type="button"
-									className="absolute right-4 top-1/2 -translate-y-1/2 text-dark-400 hover:text-dark-200 transition-colors"
+									className="absolute right-4 top-1/2 -translate-y-1/2 text-neutral-500 hover:text-neutral-700 transition-colors"
 									onClick={() => setShowPassword(!showPassword)}
 								>
 									{showPassword ? (
@@ -252,7 +277,7 @@ export default function Login() {
 						</form>
 
 						{/* Footer */}
-						<p className="text-xs text-dark-400 text-center mt-6 leading-relaxed">
+						<p className="text-xs text-neutral-500 text-center mt-6 leading-relaxed">
 							By {authMode === "signin" ? "signing in" : "creating an account"} you agree to our{" "}
 							<Link href="/terms" className="text-primary-400 hover:text-primary-500">
 								Terms of Service
@@ -266,10 +291,11 @@ export default function Login() {
 
 					{/* Back to home */}
 					<div className="text-center mt-6">
-						<Link href="/" className="text-dark-400 hover:text-dark-200 text-sm transition-colors">
+						<Link href="/" className="text-neutral-500 hover:text-neutral-700 text-sm transition-colors">
 							← Back to home
 						</Link>
 					</div>
+				</div>
 				</div>
 			</div>
 		</>

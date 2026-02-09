@@ -1,7 +1,12 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { TrashIcon, StarIcon, PlusIcon, XMarkIcon, ArrowsPointingOutIcon, ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/24/outline";
-import { StarIcon as StarIconSolid } from "@heroicons/react/24/solid";
+import { DeleteIcon } from "@/components/ui/delete";
+import { PlusIcon } from "@/components/ui/plus";
+import { XIcon } from "@/components/ui/x";
+import { MaximizeIcon } from "@/components/ui/maximize";
+import { ChevronLeftIcon } from "@/components/ui/chevron-left";
+import { ChevronRightIcon } from "@/components/ui/chevron-right";
+import { Star } from "lucide-react";
 
 const IMAGES_PER_PAGE = 4;
 
@@ -31,7 +36,7 @@ export default function ImageGallery({ images, loading, onSetPrimary, onDelete, 
 		return (
 			<div className="text-center py-8">
 				<div className="w-16 h-16 bg-light-100 rounded-full flex items-center justify-center mx-auto mb-4">
-					<PlusIcon className="w-8 h-8 text-dark-400" />
+					<PlusIcon size={32} className=" text-dark-400" />
 				</div>
 				<p className="text-dark-400 text-sm mb-4">No images yet. Generate your first image!</p>
 				<button onClick={onGenerateClick} className="btn btn-primary">
@@ -70,7 +75,7 @@ export default function ImageGallery({ images, loading, onSetPrimary, onDelete, 
 						{image.isPrimary && (
 							<div className="absolute top-2 left-2 z-10">
 								<div className="px-2 py-1 bg-yellow-500 text-white text-xs rounded-full flex items-center gap-1 shadow-lg">
-									<StarIconSolid className="w-3 h-3" />
+									<Star className="w-3 h-3 fill-current" />
 									<span>Primary</span>
 								</div>
 							</div>
@@ -87,7 +92,7 @@ export default function ImageGallery({ images, loading, onSetPrimary, onDelete, 
 								className="p-2 bg-white/20 hover:bg-white/30 rounded-full text-white transition-colors"
 								title="View Full"
 							>
-								<ArrowsPointingOutIcon className="w-5 h-5" />
+								<MaximizeIcon size={20} />
 							</button>
 
 							{/* Set as Primary */}
@@ -100,7 +105,7 @@ export default function ImageGallery({ images, loading, onSetPrimary, onDelete, 
 									className="p-2 bg-white/20 hover:bg-yellow-500 rounded-full text-white transition-colors"
 									title="Set as Primary"
 								>
-									<StarIcon className="w-5 h-5" />
+									<Star className="w-5 h-5" />
 								</button>
 							)}
 
@@ -113,7 +118,7 @@ export default function ImageGallery({ images, loading, onSetPrimary, onDelete, 
 								className="p-2 bg-white/20 hover:bg-red-500 rounded-full text-white transition-colors"
 								title="Delete"
 							>
-								<TrashIcon className="w-5 h-5" />
+								<DeleteIcon size={20} />
 							</button>
 						</div>
 					</motion.div>
@@ -127,7 +132,7 @@ export default function ImageGallery({ images, loading, onSetPrimary, onDelete, 
 						onClick={onGenerateClick}
 						className="aspect-[9/16] rounded-lg border-2 border-dashed border-light-300 hover:border-primary-400 hover:bg-primary-50 transition-all flex flex-col items-center justify-center gap-2 text-dark-400 hover:text-primary-500"
 					>
-						<PlusIcon className="w-8 h-8" />
+						<PlusIcon size={32} className="" />
 						<span className="text-sm font-medium">Generate</span>
 					</motion.button>
 				)}
@@ -141,7 +146,7 @@ export default function ImageGallery({ images, loading, onSetPrimary, onDelete, 
 						disabled={currentPage === 0}
 						className="p-2 rounded-lg border border-light-300 hover:bg-light-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
 					>
-						<ChevronLeftIcon className="w-5 h-5 text-dark-300" />
+						<ChevronLeftIcon size={20} className=" text-dark-300" />
 					</button>
 
 					<div className="flex items-center gap-2">
@@ -165,7 +170,7 @@ export default function ImageGallery({ images, loading, onSetPrimary, onDelete, 
 						disabled={currentPage === totalPages - 1}
 						className="p-2 rounded-lg border border-light-300 hover:bg-light-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
 					>
-						<ChevronRightIcon className="w-5 h-5 text-dark-300" />
+						<ChevronRightIcon size={20} className=" text-dark-300" />
 					</button>
 				</div>
 			)}
@@ -185,7 +190,7 @@ export default function ImageGallery({ images, loading, onSetPrimary, onDelete, 
 							onClick={() => setSelectedImage(null)}
 							className="absolute top-4 right-4 z-10 p-2 bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-full text-white transition-all"
 						>
-							<XMarkIcon className="w-6 h-6" />
+							<XIcon size={24} />
 						</button>
 
 						<motion.div
@@ -210,7 +215,7 @@ export default function ImageGallery({ images, loading, onSetPrimary, onDelete, 
 									<div className="flex items-center gap-2">
 										{selectedImage.isPrimary && (
 											<span className="px-2 py-1 bg-yellow-500 text-white text-xs rounded-full flex items-center gap-1">
-												<StarIconSolid className="w-3 h-3" />
+												<Star className="w-3 h-3 fill-current" />
 												Primary
 											</span>
 										)}
@@ -225,7 +230,7 @@ export default function ImageGallery({ images, loading, onSetPrimary, onDelete, 
 												}}
 												className="px-3 py-1.5 bg-yellow-500/80 hover:bg-yellow-500 rounded-lg text-white text-sm transition-colors flex items-center gap-1"
 											>
-												<StarIcon className="w-4 h-4" />
+												<Star className="w-4 h-4" />
 												Set Primary
 											</button>
 										)}
@@ -236,7 +241,7 @@ export default function ImageGallery({ images, loading, onSetPrimary, onDelete, 
 											}}
 											className="px-3 py-1.5 bg-red-500/80 hover:bg-red-500 rounded-lg text-white text-sm transition-colors flex items-center gap-1"
 										>
-											<TrashIcon className="w-4 h-4" />
+											<DeleteIcon size={16} />
 											Delete
 										</button>
 									</div>

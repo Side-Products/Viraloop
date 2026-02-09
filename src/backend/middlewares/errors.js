@@ -30,6 +30,7 @@ export default (err, req, res, next) => {
 		success: false,
 		error,
 		message: error.message || "Internal Server Error",
+		errorType: err.errorType || error.errorType || null,
 		stack: process.env.NODE_ENV === "development" ? error.stack : undefined,
 	});
 };

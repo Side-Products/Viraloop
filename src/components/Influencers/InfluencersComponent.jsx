@@ -2,7 +2,9 @@ import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import axios from "axios";
 import { NICHES } from "@/config/constants";
-import { UserIcon, PlusIcon, MagnifyingGlassIcon } from "@heroicons/react/24/outline";
+import { UserIcon } from "@/components/ui/user";
+import { PlusIcon } from "@/components/ui/plus";
+import { SearchIcon } from "@/components/ui/search";
 import CreateInfluencer from "./CreateInfluencer";
 import InfluencerCard from "./InfluencerCard";
 
@@ -118,16 +120,16 @@ export default function InfluencersComponent() {
 					<div className="mb-6 sm:mb-8">
 						<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
 							<div className="flex items-center gap-3">
-								<div className="p-2 sm:p-3 bg-primary-100 rounded-xl">
-									<UserIcon className="w-6 h-6 text-primary-500" />
+								<div className="p-2 sm:p-3 bg-primary-100 rounded-xl text-primary-500">
+									<UserIcon size={24} />
 								</div>
 								<div>
 									<h1 className="text-xl sm:text-2xl font-semibold text-dark-100 tracking-tight">AI Influencers</h1>
 									<p className="text-dark-400 text-sm mt-1">Create and manage your AI influencers</p>
 								</div>
 							</div>
-							<button onClick={() => setShowCreateForm(true)} className="btn btn-primary px-4 sm:px-6 py-2 sm:py-2.5">
-								<PlusIcon className="w-4 h-4 mr-2" />
+							<button onClick={() => setShowCreateForm(true)} className="btn btn-primary px-4 sm:px-6 py-2 sm:py-2.5 flex items-center">
+								<PlusIcon size={16} className="mr-2" />
 								<span className="text-xs sm:text-sm font-medium whitespace-nowrap">Create Influencer</span>
 							</button>
 						</div>
@@ -138,7 +140,7 @@ export default function InfluencersComponent() {
 						<div className="flex flex-col sm:flex-row gap-4">
 							{/* Search */}
 							<div className="relative flex-1">
-								<MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-dark-400 z-10 pointer-events-none" />
+								<SearchIcon size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-dark-400 z-10 pointer-events-none" />
 								<input
 									type="text"
 									placeholder="Search influencers..."
@@ -188,15 +190,15 @@ export default function InfluencersComponent() {
 						</div>
 					) : influencers.length === 0 ? (
 						<div className="card p-12 text-center">
-							<div className="w-16 h-16 bg-primary-100 rounded-full flex items-center justify-center mx-auto mb-4">
-								<UserIcon className="w-8 h-8 text-primary-600" />
+							<div className="w-16 h-16 bg-primary-100 rounded-full flex items-center justify-center mx-auto mb-4 text-primary-600">
+								<UserIcon size={32} />
 							</div>
 							<h3 className="text-xl font-semibold text-dark-100 mb-2">No influencers yet</h3>
 							<p className="font-secondary text-sm text-neutral-500 mb-6 max-w-md mx-auto">
 								Create your first AI influencer to start generating viral videos. Each influencer has a unique look, voice, and personality.
 							</p>
-							<button onClick={() => setShowCreateForm(true)} className="btn btn-primary">
-								<PlusIcon className="w-4 h-4 mr-2" />
+							<button onClick={() => setShowCreateForm(true)} className="btn btn-primary flex items-center">
+								<PlusIcon size={16} className="mr-2" />
 								Create Your First Influencer
 							</button>
 						</div>

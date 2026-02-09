@@ -69,6 +69,29 @@ function TeamContextProvider({ children }) {
 		}
 	}, []);
 
+	// Refresh teams and optionally switch to a specific team
+	const refreshTeams = useCallback(async (switchToTeamId = null) => {
+		try {
+			const response = await fetch("/api/team");
+			const data = await response.json();
+
+			if (data.success && data.teams.length > 0) {
+				setTeams(data.teams);
+
+				// If a specific team ID is provided, switch to it
+				if (switchToTeamId) {
+					const newTeam = data.teams.find((team) => team._id === switchToTeamId);
+					if (newTeam) {
+						setCurrentTeam(newTeam);
+						localStorage.setItem("selectedTeam", newTeam._id);
+					}
+				}
+			}
+		} catch (error) {
+			console.error("Failed to refresh teams:", error);
+		}
+	}, []);
+
 	const contextValue = useMemo(
 		() => ({
 			teams,
@@ -76,9 +99,10 @@ function TeamContextProvider({ children }) {
 			currentTeam,
 			setCurrentTeam: onCurrentTeamChange,
 			onCurrentTeamChange,
+			refreshTeams,
 			loading,
 		}),
-		[teams, currentTeam, onCurrentTeamChange, loading]
+		[teams, currentTeam, onCurrentTeamChange, refreshTeams, loading]
 	);
 
 	return <TeamContext.Provider value={contextValue}>{children}</TeamContext.Provider>;

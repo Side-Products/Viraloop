@@ -1,7 +1,7 @@
 import { combineReducers } from "redux";
 import { influencerReducers } from "./influencerReducers";
 import { postReducers } from "./postReducers";
-import { scheduleReducers } from "./scheduleReducers";
+import { loopReducers } from "./loopReducers";
 import { socialReducers } from "./socialReducers";
 
 const reducer = combineReducers({
@@ -11,8 +11,8 @@ const reducer = combineReducers({
 	// Posts
 	posts: postReducers,
 
-	// Schedules
-	schedules: scheduleReducers,
+	// Loops
+	loops: loopReducers,
 
 	// Social accounts
 	social: socialReducers,

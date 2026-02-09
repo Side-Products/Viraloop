@@ -1,7 +1,11 @@
 import { useState } from "react";
 import { useRouter } from "next/router";
 import { motion } from "framer-motion";
-import { TrashIcon, PlayIcon, SpeakerWaveIcon, CalendarIcon, PauseIcon } from "@heroicons/react/24/outline";
+import { DeleteIcon } from "@/components/ui/delete";
+import { PlayIcon } from "@/components/ui/play";
+import { VolumeIcon } from "@/components/ui/volume";
+import { CalendarDaysIcon } from "@/components/ui/calendar-days";
+import { PauseIcon } from "@/components/ui/pause";
 import { FaMale, FaFemale } from "react-icons/fa";
 
 export default function InfluencerCard({ influencer, viewMode = "grid", onDelete, onEdit }) {
@@ -89,7 +93,7 @@ export default function InfluencerCard({ influencer, viewMode = "grid", onDelete
 
 						<div className="flex items-center gap-4 text-xs text-dark-400">
 							<div className="flex items-center gap-1">
-								<CalendarIcon className="w-3 h-3" />
+								<CalendarDaysIcon size={12} />
 								{formatDate(influencer.createdAt)}
 							</div>
 						</div>
@@ -98,7 +102,7 @@ export default function InfluencerCard({ influencer, viewMode = "grid", onDelete
 					{/* Actions */}
 					<div className="flex items-center gap-2">
 						<button onClick={onDelete} className="p-2 bg-red-50 hover:bg-red-100 text-red-500 hover:text-red-600 rounded-lg transition-colors">
-							<TrashIcon className="w-4 h-4" />
+							<DeleteIcon size={16} />
 						</button>
 					</div>
 				</div>
@@ -170,7 +174,7 @@ export default function InfluencerCard({ influencer, viewMode = "grid", onDelete
 							className="p-3 bg-primary-500/90 hover:bg-primary-500 text-white rounded-full backdrop-blur-sm border border-primary-400/30 shadow-lg hover:shadow-primary-400/50 transition-all duration-200 hover:scale-110"
 							title={showVideo ? "Show image" : "Show video preview"}
 						>
-							{showVideo ? <PauseIcon className="w-5 h-5" /> : <PlayIcon className="w-5 h-5" />}
+							{showVideo ? <PauseIcon size={20} /> : <PlayIcon size={20} />}
 						</button>
 					</div>
 				)}
@@ -217,8 +221,8 @@ export default function InfluencerCard({ influencer, viewMode = "grid", onDelete
 					{/* Footer */}
 					<div className="flex items-center justify-between text-xs text-neutral-300 pt-3 border-t border-white/20">
 						{/* Voice Info */}
-						<div className="flex items-center gap-2">
-							<SpeakerWaveIcon className="w-4 h-4 text-neutral-300" />
+						<div className="flex items-center gap-2 text-neutral-300">
+							<VolumeIcon size={16} />
 							<span className="text-xs text-neutral-300">{influencer.voice?.name}</span>
 							{influencer.voice?.labels?.accent && (
 								<span className="text-[11px] text-neutral-400 capitalize">• {influencer.voice.labels.accent}</span>

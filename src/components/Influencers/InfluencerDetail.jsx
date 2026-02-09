@@ -3,17 +3,15 @@ import { useRouter } from "next/router";
 import axios from "axios";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
-import {
-	ArrowLeftIcon,
-	TrashIcon,
-	SpeakerWaveIcon,
-	CalendarIcon,
-	TagIcon,
-	UserIcon,
-	SparklesIcon,
-	PlayIcon,
-	PauseIcon,
-} from "@heroicons/react/24/outline";
+import { ArrowLeftIcon } from "@/components/ui/arrow-left";
+import { DeleteIcon } from "@/components/ui/delete";
+import { VolumeIcon } from "@/components/ui/volume";
+import { CalendarDaysIcon } from "@/components/ui/calendar-days";
+import { UserIcon } from "@/components/ui/user";
+import { SparklesIcon } from "@/components/ui/sparkles";
+import { PlayIcon } from "@/components/ui/play";
+import { PauseIcon } from "@/components/ui/pause";
+import { Tag } from "lucide-react";
 import { FaMale, FaFemale } from "react-icons/fa";
 import ImageGallery from "./ImageGallery";
 import GenerateImageModal from "./GenerateImageModal";
@@ -171,7 +169,9 @@ export default function InfluencerDetail() {
 		return (
 			<div className="p-6">
 				<div className="card p-12 text-center">
-					<UserIcon className="w-16 h-16 text-dark-400 mx-auto mb-4" />
+					<div className="text-dark-400 mx-auto mb-4 flex justify-center">
+						<UserIcon size={64} />
+					</div>
 					<h3 className="text-xl font-semibold text-dark-100 mb-2">Influencer not found</h3>
 					<button onClick={() => router.push("/influencers")} className="btn btn-primary mt-4">
 						Back to Influencers
@@ -186,16 +186,16 @@ export default function InfluencerDetail() {
 			{/* Header */}
 			<div className="mb-6 flex items-center justify-between">
 				<div className="flex items-center gap-3">
-					<button onClick={() => router.push("/influencers")} className="p-2 hover:bg-light-200 rounded-lg transition-all duration-200">
-						<ArrowLeftIcon className="w-5 h-5 text-dark-400" />
+					<button onClick={() => router.push("/influencers")} className="p-2 hover:bg-light-200 rounded-lg transition-all duration-200 text-dark-400">
+						<ArrowLeftIcon size={20} />
 					</button>
 					<div>
 						<h1 className="text-xl sm:text-2xl font-semibold text-dark-100 tracking-tight">{influencer.name}</h1>
 						<p className="text-dark-400 text-sm mt-1">Influencer Details</p>
 					</div>
 				</div>
-				<button onClick={handleDelete} disabled={deleting} className="btn bg-red-50 hover:bg-red-100 text-red-600 px-4 py-2">
-					<TrashIcon className="w-4 h-4 mr-2" />
+				<button onClick={handleDelete} disabled={deleting} className="btn bg-red-50 hover:bg-red-100 text-red-600 px-4 py-2 flex items-center">
+					<DeleteIcon size={16} className="mr-2" />
 					{deleting ? "Deleting..." : "Delete"}
 				</button>
 			</div>
@@ -219,7 +219,7 @@ export default function InfluencerDetail() {
 									onClick={() => setShowVideo(!showVideo)}
 									className="absolute bottom-4 right-4 p-3 bg-black/70 hover:bg-black/80 text-white rounded-full backdrop-blur-sm transition-all"
 								>
-									{showVideo ? <PauseIcon className="w-5 h-5" /> : <PlayIcon className="w-5 h-5" />}
+									{showVideo ? <PauseIcon size={20} /> : <PlayIcon size={20} />}
 								</button>
 							)}
 
@@ -257,7 +257,7 @@ export default function InfluencerDetail() {
 
 							{/* Voice Info */}
 							<div className="flex items-center gap-2 text-sm text-dark-400">
-								<SpeakerWaveIcon className="w-4 h-4" />
+								<VolumeIcon size={16} />
 								<span>{influencer.voice?.name}</span>
 								{influencer.voice?.labels?.accent && <span className="text-dark-300">• {influencer.voice.labels.accent}</span>}
 							</div>
@@ -275,7 +275,7 @@ export default function InfluencerDetail() {
 
 							{/* Date */}
 							<div className="flex items-center gap-2 text-xs text-dark-400 pt-2 border-t border-light-200">
-								<CalendarIcon className="w-4 h-4" />
+								<CalendarDaysIcon size={16} />
 								<span>Created {formatDate(influencer.createdAt)}</span>
 							</div>
 						</div>
@@ -288,8 +288,8 @@ export default function InfluencerDetail() {
 					<motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="card p-6">
 						<div className="flex items-center justify-between mb-4">
 							<h2 className="text-lg font-semibold text-dark-100">Image Gallery</h2>
-							<button onClick={() => setShowGenerateModal(true)} className="btn btn-primary px-4 py-2">
-								<SparklesIcon className="w-4 h-4 mr-2" />
+							<button onClick={() => setShowGenerateModal(true)} className="btn btn-primary px-4 py-2 flex items-center">
+								<SparklesIcon size={16} className="mr-2" />
 								Generate Image
 							</button>
 						</div>

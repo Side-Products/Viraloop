@@ -29,11 +29,32 @@ const teamSchema = new mongoose.Schema(
 		// Viraloop-specific fields
 		influencerLimit: {
 			type: Number,
-			default: 5, // Free tier limit
+			default: 0, // No access without payment
+		},
+		imageLimit: {
+			type: Number,
+			default: 0, // No access without payment
+		},
+		videoLimit: {
+			type: Number,
+			default: 0, // No access without payment
+		},
+		// Monthly usage tracking (team-wide, not per influencer)
+		imagesUsedThisMonth: {
+			type: Number,
+			default: 0,
+		},
+		videosUsedThisMonth: {
+			type: Number,
+			default: 0,
+		},
+		usagePeriodStart: {
+			type: Date,
+			default: Date.now,
 		},
 		postLimit: {
 			type: Number,
-			default: 10, // Free tier monthly post limit
+			default: 0, // Deprecated - kept for backwards compatibility
 		},
 		// API key overrides
 		OPENAI_API_KEY: {

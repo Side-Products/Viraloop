@@ -16,8 +16,11 @@ export default function Document() {
 				<link rel="preconnect" href="https://fonts.googleapis.com" />
 				<link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
 				<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+
+				{/* PromoteKit Affiliate Tracking */}
+				<script async src="https://cdn.promotekit.com/promotekit.js" data-promotekit="19a3f122-6fe9-4c04-874e-ecbbba19705d"></script>
 			</Head>
-			<body className="bg-light-50 text-dark-100">
+			<body className="bg-light-50 text-neutral-900">
 				<Main />
 				<NextScript />
 			</body>

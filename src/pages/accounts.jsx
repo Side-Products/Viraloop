@@ -191,8 +191,8 @@ export default function Accounts({ user }) {
 				<div className="flex items-start gap-4">
 					<div className={`w-14 h-14 ${config.color} rounded-xl flex items-center justify-center ${config.textColor}`}>{config.icon}</div>
 					<div className="flex-1">
-						<h3 className="text-lg font-semibold text-dark-100">{config.name}</h3>
-						<p className="text-dark-400 text-sm mt-1">{config.description}</p>
+						<h3 className="text-lg font-semibold text-neutral-900">{config.name}</h3>
+						<p className="text-neutral-500 text-sm mt-1">{config.description}</p>
 					</div>
 				</div>
 
@@ -213,20 +213,20 @@ export default function Accounts({ user }) {
 									/>
 								) : (
 									<div className="w-10 h-10 bg-light-200 rounded-full flex items-center justify-center">
-										<span className="text-dark-400 text-sm font-medium">
+										<span className="text-neutral-500 text-sm font-medium">
 											{(account.channelName || account.username || account.displayName || "U").charAt(0).toUpperCase()}
 										</span>
 									</div>
 								)}
 								<div className="flex-1 min-w-0">
-									<p className="text-sm font-medium text-dark-100 truncate">
+									<p className="text-sm font-medium text-neutral-900 truncate">
 										{account.channelName || account.displayName || account.username || "Connected"}
 									</p>
 									{account.username && account.displayName && account.username !== account.displayName && (
-										<p className="text-xs text-dark-400">@{account.username}</p>
+										<p className="text-xs text-neutral-500">@{account.username}</p>
 									)}
 									{(account.subscriberCount || account.followerCount || account.followersCount) && (
-										<p className="text-xs text-dark-400">
+										<p className="text-xs text-neutral-500">
 											{parseInt(account.subscriberCount || account.followerCount || account.followersCount).toLocaleString()} followers
 										</p>
 									)}
@@ -246,7 +246,7 @@ export default function Accounts({ user }) {
 								<button
 									onClick={() => handleDisconnect(platformId)}
 									disabled={disconnecting === platformId}
-									className="btn btn-outline text-sm text-error-600 border-error-200 hover:bg-error-50"
+									className="btn btn-secondary text-sm text-error-600 border-error-200 hover:bg-error-50"
 								>
 									{disconnecting === platformId ? "Disconnecting..." : "Disconnect"}
 								</button>
@@ -254,11 +254,11 @@ export default function Accounts({ user }) {
 						</div>
 					) : (
 						<div className="flex items-center justify-between">
-							<span className="text-sm text-dark-400">Not connected</span>
+							<span className="text-sm text-neutral-500">Not connected</span>
 							<button
 								onClick={() => handleConnect(platformId)}
 								disabled={connecting === platformId || !selectedInfluencer}
-								className="btn btn-outline text-sm"
+								className="btn btn-secondary text-sm"
 							>
 								{connecting === platformId ? "Connecting..." : "Connect"}
 							</button>
@@ -279,13 +279,13 @@ export default function Accounts({ user }) {
 				<div className="p-6">
 					{/* Header */}
 					<div className="mb-8">
-						<h1 className="text-2xl font-bold text-dark-100">Connected Accounts</h1>
-						<p className="text-dark-400 mt-1">Connect social media accounts for each influencer to enable auto-posting</p>
+						<h1 className="text-2xl font-bold text-neutral-900">Connected Accounts</h1>
+						<p className="text-neutral-500 mt-1">Connect social media accounts for each influencer to enable auto-posting</p>
 					</div>
 
 					{/* Influencer Selector */}
 					<div className="mb-8">
-						<label className="block text-sm font-medium text-dark-300 mb-3">Select Influencer</label>
+						<label className="block text-sm font-medium text-neutral-600 mb-3">Select Influencer</label>
 						{loadingInfluencers ? (
 							<div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-4">
 								{[1, 2, 3, 4, 5, 6].map((i) => (
@@ -295,7 +295,7 @@ export default function Accounts({ user }) {
 						) : influencers.length === 0 ? (
 							<div className="card p-8 text-center">
 								<div className="w-16 h-16 bg-light-200 rounded-full flex items-center justify-center mx-auto mb-4">
-									<svg className="w-8 h-8 text-dark-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<svg className="w-8 h-8 text-neutral-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 										<path
 											strokeLinecap="round"
 											strokeLinejoin="round"
@@ -304,7 +304,7 @@ export default function Accounts({ user }) {
 										/>
 									</svg>
 								</div>
-								<p className="text-dark-400 text-sm">
+								<p className="text-neutral-500 text-sm">
 									No influencers found.{" "}
 									<a href="/influencers" className="text-primary-400 hover:underline">
 										Create one first
@@ -378,7 +378,7 @@ export default function Accounts({ user }) {
 					{selectedInfluencer && (
 						<div>
 							<div className="flex items-center gap-3 mb-4">
-								<h2 className="text-lg font-semibold text-dark-100">Connected Accounts for</h2>
+								<h2 className="text-lg font-semibold text-neutral-900">Connected Accounts for</h2>
 								<div className="flex items-center gap-2 bg-primary-50 px-3 py-1.5 rounded-full">
 									{selectedInfluencer.imageUrl ? (
 										<img src={selectedInfluencer.imageUrl} alt={selectedInfluencer.name} className="w-6 h-6 rounded-full object-cover" />

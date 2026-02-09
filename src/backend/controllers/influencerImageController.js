@@ -4,6 +4,7 @@ import InfluencerImage from "../models/influencerImage";
 import Member from "../models/member";
 import ErrorHandler from "@/backend/utils/errorHandler";
 import catchAsyncErrors from "@/backend/middlewares/catchAsyncErrors";
+import { checkAndIncrementImageUsage } from "@/backend/middlewares/usageLimits";
 
 // Get all images for an influencer
 export const getInfluencerImages = catchAsyncErrors(async (req, res, next) => {
@@ -62,6 +63,21 @@ export const createInfluencerImage = catchAsyncErrors(async (req, res, next) => 
 	const influencer = await Influencer.findOne({ _id: id, teamId, isActive: true });
 	if (!influencer) {
 		return next(new ErrorHandler("Influencer not found", 404));
+	}
+
+	// Check team's monthly image limit
+	const usageCheck = await checkAndIncrementImageUsage(teamId);
+	if (!usageCheck.allowed) {
+		return res.status(429).json({
+			success: false,
+			message: usageCheck.message,
+			limitReached: true,
+			usage: {
+				used: usageCheck.used,
+				limit: usageCheck.limit,
+				remaining: usageCheck.remaining,
+			},
+		});
 	}
 
 	// Validate required fields

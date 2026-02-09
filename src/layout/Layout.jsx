@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import { useRouter } from "next/router";
 import Navbar from "@/components/Navbar/Navbar";
 import Footer from "./Footer";
+import CrispChat from "@/components/Crisp";
 
 const Layout = ({ children }) => {
 	const router = useRouter();
@@ -21,7 +22,10 @@ const Layout = ({ children }) => {
 
 	// Pages where footer should be shown
 	const showFooter = useMemo(() => {
-		return ["/", "/pricing", "/privacy", "/terms", "/about"].includes(router.pathname);
+		return (
+			["/", "/pricing", "/privacy", "/terms", "/about"].includes(router.pathname) ||
+			router.pathname.startsWith("/blog")
+		);
 	}, [router.pathname]);
 
 	return (
@@ -29,6 +33,7 @@ const Layout = ({ children }) => {
 			{!hideNavbar && <Navbar />}
 			<main>{children}</main>
 			{showFooter && <Footer />}
+			<CrispChat />
 		</div>
 	);
 };

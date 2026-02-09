@@ -1,10 +1,28 @@
+import { useRef } from "react";
 import Head from "next/head";
 import Link from "next/link";
+import { useRouter } from "next/router";
+import { useSession, signIn } from "next-auth/react";
 import { PRODUCT_NAME } from "@/config/constants";
 import { FaTiktok, FaInstagram, FaYoutube } from "react-icons/fa";
-import { IoVideocamOutline } from "react-icons/io5";
+import { HomeIcon } from "@/components/ui/home";
+import { ClapIcon } from "@/components/ui/clap";
+import ScrollingBackground from "@/components/ScrollingBackground";
 
 export default function Home() {
+	const router = useRouter();
+	const { status } = useSession();
+	const isAuthenticated = status === "authenticated";
+	const homeIconRef = useRef(null);
+	const clapIconRef = useRef(null);
+
+	const handleGoogleAction = () => {
+		if (isAuthenticated) {
+			router.push("/dashboard");
+		} else {
+			signIn("google", { callbackUrl: "/dashboard" });
+		}
+	};
 	return (
 		<>
 			<Head>
@@ -15,20 +33,19 @@ export default function Home() {
 				/>
 			</Head>
 
-			<div className="min-h-screen bg-gradient-to-br from-light-50 via-primary-50 to-light-100">
+			<div className="min-h-screen bg-light-50 relative">
+				{/* Scrolling Background Images */}
+				<ScrollingBackground fadeTop={true} fadeBottom={true} />
 
 				{/* Hero Section */}
-				<main className="pb-20 px-4 min-h-screen flex justify-center items-center">
+				<main className="relative z-20 pb-20 px-4 min-h-screen flex justify-center items-center">
 					<div className="max-w-5xl mx-auto text-center">
-						<div className="inline-flex items-center gap-2 bg-primary-100 text-primary-700 px-4 py-1.5 rounded-full text-sm font-medium mb-8">
-							<span className="relative flex h-2 w-2">
-								<span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary-400 opacity-75"></span>
-								<span className="relative inline-flex rounded-full h-2 w-2 bg-primary-500"></span>
-							</span>
-							Now with Veo 3.1 Video Generation
+						<div className="inline-flex items-center gap-2 bg-primary-100/90 backdrop-blur-sm text-primary-700 px-4 py-1.5 rounded-full text-sm font-medium mb-8">
+							<img src="/yc.webp" alt="YC" className="h-4 w-4" />
+							Not backed by YCombinator
 						</div>
 
-						<h1 className="text-5xl md:text-7xl font-bold text-dark-100 leading-tight mb-6 tracking-tight">
+						<h1 className="text-5xl md:text-7xl font-bold text-neutral-900 leading-tight mb-6 tracking-tight">
 							Create your own AI Influencers
 							<div className="text-7xl">
 								Make <span className="gradient-text"> Viral Videos </span>
@@ -52,14 +69,28 @@ export default function Home() {
 						</p>
 
 						<div className="flex flex-col sm:flex-row gap-6 justify-center mt-20">
-							<Link href="/register" className="btn btn-primary !text-base !px-5 !py-3">
-								<IoVideocamOutline className="w-7 h-7 mr-5" />
+							<Link
+								href="/register"
+								className="btn btn-primary !text-base !px-5 !py-3"
+								onMouseEnter={() => clapIconRef.current?.startAnimation()}
+								onMouseLeave={() => clapIconRef.current?.stopAnimation()}
+							>
+								<ClapIcon ref={clapIconRef} size={24} className="mr-4" />
 								Watch Demo Video
 							</Link>
-							<Link href="/register" className="btn btn-outline !text-base !px-5 !py-3">
-								<img src="/google.png" alt="Google" className="w-7 h-7 mr-5" />
-								Start free with Google
-							</Link>
+							<button
+								onClick={handleGoogleAction}
+								className="btn btn-secondary !text-base !px-5 !py-3"
+								onMouseEnter={() => homeIconRef.current?.startAnimation()}
+								onMouseLeave={() => homeIconRef.current?.stopAnimation()}
+							>
+								{isAuthenticated ? (
+									<HomeIcon ref={homeIconRef} size={24} className="mr-4" />
+								) : (
+									<img src="/google.png" alt="Google" className="w-7 h-7 mr-4" />
+								)}
+								{isAuthenticated ? "Go to Dashboard" : "Start for $1 with Google"}
+							</button>
 						</div>
 					</div>
 				</main>
@@ -67,7 +98,7 @@ export default function Home() {
 				{/* Features Section */}
 				<section className="py-20 bg-light-50">
 					<div className="max-w-6xl mx-auto px-4">
-						<h2 className="text-3xl md:text-4xl font-bold text-center text-dark-100 mb-12">Everything You Need to Go Viral</h2>
+						<h2 className="text-3xl md:text-4xl font-bold text-center text-neutral-900 mb-12">Everything You Need to Go Viral</h2>
 
 						<div className="grid md:grid-cols-3 gap-8">
 							<div className="card p-6">
@@ -81,8 +112,8 @@ export default function Home() {
 										/>
 									</svg>
 								</div>
-								<h3 className="text-xl font-semibold text-dark-100 mb-2">AI Influencer Creation</h3>
-								<p className="text-dark-400">
+								<h3 className="text-xl font-semibold text-neutral-900 mb-2">AI Influencer Creation</h3>
+								<p className="text-neutral-500">
 									Generate unique AI influencers with custom looks, voices, and personalities. Perfect for any niche.
 								</p>
 							</div>
@@ -98,8 +129,8 @@ export default function Home() {
 										/>
 									</svg>
 								</div>
-								<h3 className="text-xl font-semibold text-dark-100 mb-2">Veo 3.1 Video Generation</h3>
-								<p className="text-dark-400">
+								<h3 className="text-xl font-semibold text-neutral-900 mb-2">Veo 3.1 Video Generation</h3>
+								<p className="text-neutral-500">
 									Create stunning talking videos with the latest AI technology. Natural lip-sync and realistic movements.
 								</p>
 							</div>
@@ -115,8 +146,8 @@ export default function Home() {
 										/>
 									</svg>
 								</div>
-								<h3 className="text-xl font-semibold text-dark-100 mb-2">Loop Posting</h3>
-								<p className="text-dark-400">Set up once and let it run forever. Automatically post to all platforms on your schedule.</p>
+								<h3 className="text-xl font-semibold text-neutral-900 mb-2">Loop Posting</h3>
+								<p className="text-neutral-500">Set up once and let it run forever. Automatically post to all platforms on your schedule.</p>
 							</div>
 						</div>
 					</div>
@@ -129,7 +160,7 @@ export default function Home() {
 						<p className="text-primary-100 text-lg mb-8">Join thousands of creators using Viraloop to build their social media empire.</p>
 						<Link
 							href="/register"
-							className="inline-flex items-center gap-2 bg-white text-primary-600 font-semibold px-8 py-3 rounded-lg hover:bg-primary-50 transition-colors"
+							className="inline-flex items-center gap-2 bg-white text-primary-600 font-semibold px-8 py-3 rounded-sm hover:bg-primary-50 transition-colors"
 						>
 							Get Started Free
 							<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

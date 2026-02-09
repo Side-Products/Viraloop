@@ -7,6 +7,8 @@ import { Toaster } from "sonner";
 import Head from "next/head";
 import Layout from "@/layout/Layout";
 import TeamContextProvider from "@/store/TeamContextProvider";
+import { TrialModalProvider } from "@/store/TrialModalContextProvider";
+import TrialModal from "@/components/TrialModal";
 
 function MyApp({ Component, ...rest }) {
 	const { store, props } = wrapper.useWrappedStore(rest);
@@ -24,21 +26,24 @@ function MyApp({ Component, ...rest }) {
 
 			<SessionProvider session={pageProps.session}>
 				<TeamContextProvider>
-					<Provider store={store}>
-						<Layout>
-							<Component {...pageProps} />
-						</Layout>
-						<Toaster
-							position="top-right"
-							toastOptions={{
-								style: {
-									background: "#ffffff",
-									color: "#1f2937",
-									border: "1px solid #e5e7eb",
-								},
-							}}
-						/>
-					</Provider>
+					<TrialModalProvider>
+						<Provider store={store}>
+							<Layout>
+								<Component {...pageProps} />
+							</Layout>
+							<TrialModal />
+							<Toaster
+								position="top-right"
+								toastOptions={{
+									style: {
+										background: "#ffffff",
+										color: "#1f2937",
+										border: "1px solid #e5e7eb",
+									},
+								}}
+							/>
+						</Provider>
+					</TrialModalProvider>
 				</TeamContextProvider>
 			</SessionProvider>
 		</>

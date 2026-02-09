@@ -1,12 +1,12 @@
 import mongoose from "mongoose";
 
-const scheduleSchema = new mongoose.Schema(
+const loopSchema = new mongoose.Schema(
 	{
 		name: {
 			type: String,
-			required: [true, "Schedule name is required"],
+			required: [true, "Loop name is required"],
 			trim: true,
-			maxLength: [100, "Schedule name cannot exceed 100 characters"],
+			maxLength: [100, "Loop name cannot exceed 100 characters"],
 		},
 		description: {
 			type: String,
@@ -25,7 +25,7 @@ const scheduleSchema = new mongoose.Schema(
 				enum: ["tiktok", "instagram", "youtube"],
 			},
 		],
-		// Schedule type
+		// Loop type
 		type: {
 			type: String,
 			enum: ["one_time", "recurring", "loop"],
@@ -166,17 +166,17 @@ const scheduleSchema = new mongoose.Schema(
 );
 
 // Indexes for efficient querying
-scheduleSchema.index({ status: 1, nextExecutionAt: 1 });
-scheduleSchema.index({ teamId: 1, status: 1 });
-scheduleSchema.index({ influencerId: 1 });
-scheduleSchema.index({ type: 1, status: 1 });
+loopSchema.index({ status: 1, nextExecutionAt: 1 });
+loopSchema.index({ teamId: 1, status: 1 });
+loopSchema.index({ influencerId: 1 });
+loopSchema.index({ type: 1, status: 1 });
 
 // Method to calculate next execution time
-scheduleSchema.methods.calculateNextExecution = function () {
+loopSchema.methods.calculateNextExecution = function () {
 	const now = new Date();
 
 	if (this.type === "one_time") {
-		// One-time schedules don't have a next execution after running
+		// One-time loops don't have a next execution after running
 		if (this.lastExecutedAt) {
 			this.status = "completed";
 			this.nextExecutionAt = null;
@@ -233,7 +233,7 @@ scheduleSchema.methods.calculateNextExecution = function () {
 };
 
 // Method to record execution
-scheduleSchema.methods.recordExecution = async function (postId, platforms, success, error = null) {
+loopSchema.methods.recordExecution = async function (postId, platforms, success, error = null) {
 	// Add to history (keep last 10)
 	this.executionHistory.unshift({
 		executedAt: new Date(),
@@ -275,4 +275,4 @@ scheduleSchema.methods.recordExecution = async function (postId, platforms, succ
 	await this.save();
 };
 
-export default mongoose.models.Schedule || mongoose.model("Schedule", scheduleSchema);
+export default mongoose.models.Loop || mongoose.model("Loop", loopSchema);

@@ -1,9 +1,9 @@
 // Viraloop Configuration Constants
 
 export const PRODUCT_NAME = "Viraloop";
-export const PRODUCT_URL = "https://viraloop.so";
-export const DOMAIN = "viraloop.so";
-export const CONTACT_EMAIL = "support@viraloop.so";
+export const PRODUCT_URL = "https://viraloop.io";
+export const DOMAIN = "viraloop.io";
+export const CONTACT_EMAIL = "hello@viraloop.io";
 
 // Social Links
 export const SOCIAL_LINKS = {
@@ -13,46 +13,214 @@ export const SOCIAL_LINKS = {
 	youtube: "https://youtube.com/@viraloop",
 };
 
-// Pricing
-export const PRICE_PER_CREDIT = 0.1; // $0.10 per credit
-export const CREDITS_PER_VIDEO = 1;
+// Plan name constants
+export const trialPlan = "Trial";
+export const growthPlanMonthly = "Growth (monthly)";
+export const growthPlanAnnual = "Growth (annual)";
+export const proPlanMonthly = "Pro (monthly)";
+export const proPlanAnnual = "Pro (annual)";
+export const ultraPlanMonthly = "Ultra (monthly)";
+export const ultraPlanAnnual = "Ultra (annual)";
 
-// Plans
-export const PLANS = {
-	free: {
-		name: "Free",
-		price: 0,
-		influencers: 2,
-		postsPerMonth: 10,
-		platforms: 1,
-		features: ["Basic video generation", "1 social platform", "Community support"],
+// Current subscription version
+export const CURRENT_SUBSCRIPTION_VERSION = 1;
+
+// Versioned subscription plans (following faceless pattern)
+export const subscriptionPlans = {
+	// Version 1: Pricing structure
+	// Trial: $1 one-time - 1 influencer, 1 image, 1 video
+	// Growth: $39/mo - 5 influencers, 40 images, 30 videos
+	// Pro: $69/mo - 15 influencers, 70 images, 60 videos
+	// Ultra: $99/mo - 50 influencers, 100 images, 100 videos
+	1: {
+		// Trial: $1 one-time - 1 influencer, 1 image, 1 video
+		trialSubscription: {
+			monthly: {
+				name: "Trial",
+				price: 1,
+				stripePriceId: "price_1SyuIo480cIYlJtw77WJVmRe",
+				isOneTime: true, // One-time purchase, not recurring
+				influencers: 1,
+				imagesPerMonth: 1,
+				videosPerMonth: 1,
+				platforms: 1,
+			},
+		},
+		// Growth: $39/mo - 5 influencers, 40 images, 30 videos
+		growthSubscription: {
+			monthly: {
+				name: "Growth (monthly)",
+				price: 39,
+				originalPrice: 59,
+				stripePriceId: "price_1SyuLS480cIYlJtwyCAgy8bb",
+				validForDays: 30,
+				influencers: 5,
+				imagesPerMonth: 40,
+				videosPerMonth: 30,
+				platforms: 2,
+			},
+			annual: {
+				name: "Growth (annual)",
+				price: 32, // ~$390/year = ~$32/mo
+				originalPrice: 49,
+				pricePerYear: 390,
+				stripePriceId: "price_1SyuLS480cIYlJtwbfB4U3wU",
+				validForDays: 365,
+				influencers: 5,
+				imagesPerMonth: 40,
+				videosPerMonth: 30,
+				platforms: 2,
+			},
+		},
+		// Pro: $69/mo - 15 influencers, 70 images, 60 videos
+		proSubscription: {
+			monthly: {
+				name: "Pro (monthly)",
+				price: 69,
+				originalPrice: 129,
+				stripePriceId: "price_1SyuMD480cIYlJtwVb367Kie",
+				validForDays: 30,
+				influencers: 15,
+				imagesPerMonth: 70,
+				videosPerMonth: 60,
+				platforms: 3,
+			},
+			annual: {
+				name: "Pro (annual)",
+				price: 57, // ~$690/year = ~$57/mo
+				originalPrice: 107,
+				pricePerYear: 690,
+				stripePriceId: "price_1SyuMD480cIYlJtwp5evP1E5",
+				validForDays: 365,
+				influencers: 15,
+				imagesPerMonth: 70,
+				videosPerMonth: 60,
+				platforms: 3,
+			},
+		},
+		// Ultra: $99/mo - 50 influencers, 100 images, 100 videos
+		ultraSubscription: {
+			monthly: {
+				name: "Ultra (monthly)",
+				price: 99,
+				originalPrice: 199,
+				stripePriceId: "price_1SyuMu480cIYlJtw174Srzq2",
+				validForDays: 30,
+				influencers: 50,
+				imagesPerMonth: 100,
+				videosPerMonth: 100,
+				platforms: 3,
+			},
+			annual: {
+				name: "Ultra (annual)",
+				price: 82, // ~$990/year = ~$82/mo
+				originalPrice: 166,
+				pricePerYear: 990,
+				stripePriceId: "price_1SyuMu480cIYlJtw670ddsS3",
+				validForDays: 365,
+				influencers: 50,
+				imagesPerMonth: 100,
+				videosPerMonth: 100,
+				platforms: 3,
+			},
+		},
 	},
-	starter: {
-		name: "Starter",
-		priceMonthly: 29,
-		priceYearly: 290,
-		influencers: 5,
-		postsPerMonth: 50,
-		platforms: 2,
-		features: ["HD video quality", "2 social platforms", "Scheduling", "Email support"],
+};
+
+// Get current version's plans
+const v1Plans = subscriptionPlans[CURRENT_SUBSCRIPTION_VERSION];
+
+// Pricing Features for detailed display
+export const PRICING_FEATURES = {
+	trial: {
+		highlights: [
+			{ icon: "influencer", text: "1 AI Influencer" },
+			{ icon: "image", text: "1 image" },
+			{ icon: "video", text: "1 video" },
+			{ icon: "platform", text: "1 social platform", platforms: ["tiktok"] },
+		],
+		features: [
+			{ icon: "video", text: "HD video quality" },
+			{ icon: "support", text: "Email support" },
+		],
+	},
+	growth: {
+		inheritFrom: "Trial",
+		highlights: [
+			{ icon: "influencer", text: "5 AI Influencers" },
+			{ icon: "image", text: "40 images/month" },
+			{ icon: "video", text: "30 videos/month" },
+			{ icon: "platform", text: "All platforms", platforms: ["tiktok", "instagram", "youtube"] },
+		],
+		features: [
+			{ icon: "video", text: "HD video quality" },
+			{ icon: "schedule", text: "Post scheduling" },
+			{ icon: "support", text: "Email support" },
+		],
+	},
+	pro: {
+		inheritFrom: "Growth",
+		highlights: [
+			{ icon: "influencer", text: "15 AI Influencers" },
+			{ icon: "image", text: "70 images/month" },
+			{ icon: "video", text: "60 videos/month" },
+			{ icon: "platform", text: "All platforms", platforms: ["tiktok", "instagram", "youtube"] },
+		],
+		features: [
+			{ icon: "video", text: "HD video quality" },
+			{ icon: "loop", text: "Loop posting" },
+			{ icon: "analytics", text: "Basic analytics" },
+			{ icon: "support", text: "Priority support" },
+		],
+	},
+	ultra: {
+		inheritFrom: "Pro",
+		highlights: [
+			{ icon: "influencer", text: "50 AI Influencers" },
+			{ icon: "image", text: "100 images/month" },
+			{ icon: "video", text: "100 videos/month" },
+			{ icon: "platform", text: "All platforms", platforms: ["tiktok", "instagram", "youtube"] },
+		],
+		features: [
+			{ icon: "video", text: "4K video quality" },
+			{ icon: "analytics", text: "Advanced analytics" },
+			{ icon: "custom", text: "Custom voice cloning" },
+			{ icon: "support", text: "Priority support" },
+		],
+	},
+};
+
+// Plan configurations for pricing page
+export const PLAN_CONFIG = {
+	trial: {
+		name: "Trial",
+		description: "Try before you subscribe",
+		subscription: v1Plans?.trialSubscription,
+		features: PRICING_FEATURES.trial,
+		highlighted: false,
+		isTrial: true,
+	},
+	growth: {
+		name: "Growth",
+		description: "Perfect for getting started",
+		subscription: v1Plans?.growthSubscription,
+		features: PRICING_FEATURES.growth,
+		highlighted: false,
 	},
 	pro: {
 		name: "Pro",
-		priceMonthly: 79,
-		priceYearly: 790,
-		influencers: 15,
-		postsPerMonth: 200,
-		platforms: 3,
-		features: ["4K video quality", "All platforms", "Loop posting", "Analytics", "Priority support"],
+		description: "Most popular for serious creators",
+		subscription: v1Plans?.proSubscription,
+		features: PRICING_FEATURES.pro,
+		highlighted: true,
+		badge: "MOST POPULAR",
 	},
-	business: {
-		name: "Business",
-		priceMonthly: 199,
-		priceYearly: 1990,
-		influencers: -1, // Unlimited
-		postsPerMonth: -1, // Unlimited
-		platforms: 3,
-		features: ["Everything in Pro", "API access", "White-label", "Dedicated support", "Custom integrations"],
+	ultra: {
+		name: "Ultra",
+		description: "For agencies and power users",
+		subscription: v1Plans?.ultraSubscription,
+		features: PRICING_FEATURES.ultra,
+		highlighted: false,
 	},
 };
 

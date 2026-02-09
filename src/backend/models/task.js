@@ -31,17 +31,13 @@ const taskSchema = new mongoose.Schema(
 			type: mongoose.Schema.Types.ObjectId,
 			ref: "Post",
 		},
-		scheduleId: {
+		loopId: {
 			type: mongoose.Schema.Types.ObjectId,
-			ref: "Schedule",
+			ref: "Loop",
 		},
 		teamId: {
 			type: mongoose.Schema.Types.ObjectId,
 			ref: "Team",
-		},
-		socialPostId: {
-			type: mongoose.Schema.Types.ObjectId,
-			ref: "SocialPost",
 		},
 		result: {
 			type: Object,

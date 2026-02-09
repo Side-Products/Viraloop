@@ -106,6 +106,10 @@ const postSchema = new mongoose.Schema(
 			enum: ["draft", "pending", "processing", "completed", "failed", "posted"],
 			default: "draft",
 		},
+		// Scheduled time for posting
+		scheduledTime: {
+			type: Date,
+		},
 		currentStage: {
 			type: String,
 			enum: ["tts", "video", "completed"],
@@ -212,10 +216,10 @@ const postSchema = new mongoose.Schema(
 				lastSyncedAt: { type: Date },
 			},
 		},
-		// Schedule reference
-		scheduleId: {
+		// Loop reference
+		loopId: {
 			type: mongoose.Schema.Types.ObjectId,
-			ref: "Schedule",
+			ref: "Loop",
 		},
 		// Metadata
 		userId: {
@@ -254,7 +258,9 @@ postSchema.index({ userId: 1, teamId: 1 });
 postSchema.index({ influencerId: 1 });
 postSchema.index({ overallStatus: 1 });
 postSchema.index({ createdAt: -1 });
-postSchema.index({ scheduleId: 1 });
+postSchema.index({ loopId: 1 });
+postSchema.index({ scheduledTime: 1 });
+postSchema.index({ teamId: 1, scheduledTime: 1 });
 
 // Method to update progress based on current stage
 postSchema.methods.updateProgress = async function () {

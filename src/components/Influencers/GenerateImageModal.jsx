@@ -2,8 +2,14 @@ import { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import axios from "axios";
 import { toast } from "sonner";
-import { XMarkIcon, SparklesIcon, PhotoIcon, TrashIcon, ArrowUpTrayIcon, CheckIcon } from "@heroicons/react/24/outline";
+import { XIcon } from "@/components/ui/x";
+import { SparklesIcon } from "@/components/ui/sparkles";
+import { DeleteIcon } from "@/components/ui/delete";
+import { UploadIcon } from "@/components/ui/upload";
+import { CheckIcon } from "@/components/ui/check";
+import { Image } from "lucide-react";
 import LoadingMessages from "./LoadingMessages";
+import { useTrialModal } from "@/store/TrialModalContextProvider";
 
 export default function GenerateImageModal({ isOpen, onClose, influencerId, onSuccess, existingImages = [] }) {
 	const [imagePrompt, setImagePrompt] = useState("");
@@ -14,6 +20,7 @@ export default function GenerateImageModal({ isOpen, onClose, influencerId, onSu
 	const [isSaving, setIsSaving] = useState(false);
 	const [selectedDimension, setSelectedDimension] = useState("9:16");
 	const fileInputRef = useRef(null);
+	const { openTrialModal } = useTrialModal();
 
 	const dimensionOptions = [
 		{ value: "1:1", label: "1:1", icon: "square" },
@@ -119,7 +126,7 @@ export default function GenerateImageModal({ isOpen, onClose, influencerId, onSu
 			imageInputs = [...imageInputs, ...otherReferences];
 
 			const response = await axios.post("/api/generate-image", {
-				prompt: `Create a photorealistic portrait of a beautiful/handsome person based on these instructions. The image should look like a professional photograph, NOT AI generated. Show a full body image of the person in a natural standing pose. IMPORTANT: Do NOT include any social media UI, app interfaces, Instagram layouts, story frames, overlays, buttons, icons, usernames, or text. Just the person in a clean, natural photograph with no digital overlays or frames. Description: ${imagePrompt}`,
+				prompt: `Create a realistic image of a beautiful/handsome person based on these instructions. The image should look like a high-quality natural photograph, NOT AI generated. IMPORTANT: Do NOT include any social media UI, app interfaces, Instagram layouts, story frames, overlays, buttons, icons, usernames, or text. Just the person in a clean, natural photograph with no digital overlays or frames. Description: ${imagePrompt}`,
 				imageInputs,
 				outputFormat: "jpg",
 			});
@@ -130,7 +137,13 @@ export default function GenerateImageModal({ isOpen, onClose, influencerId, onSu
 			}
 		} catch (error) {
 			console.error("Image generation error:", error);
-			toast.error(error.response?.data?.message || "Failed to generate image");
+			// Check if it's a usage limit error and show the trial modal
+			if (error.response?.data?.errorType === "usage_limit_reached") {
+				onClose(); // Close the generate modal first
+				openTrialModal(error.response?.data?.message || "Upgrade your plan to continue generating images");
+			} else {
+				toast.error(error.response?.data?.message || "Failed to generate image");
+			}
 		} finally {
 			setIsGenerating(false);
 		}
@@ -199,7 +212,7 @@ export default function GenerateImageModal({ isOpen, onClose, influencerId, onSu
 					<div className="flex items-center justify-between px-8 py-4 border-b border-light-200">
 						<h2 className="text-lg font-semibold text-dark-100">Generate New Image</h2>
 						<button onClick={handleClose} className="p-2 hover:bg-light-100 rounded-lg transition-colors">
-							<XMarkIcon className="w-5 h-5 text-dark-400" />
+							<XIcon size={20} className="text-dark-400" />
 						</button>
 					</div>
 
@@ -254,7 +267,7 @@ export default function GenerateImageModal({ isOpen, onClose, influencerId, onSu
 																</div>
 																{selectedExistingImages.includes(image.imageUrl) && (
 																	<div className="absolute inset-0 bg-primary-500/30 flex items-center justify-center">
-																		<CheckIcon className="w-5 h-5 text-white" />
+																		<CheckIcon size={20} className="text-white" />
 																	</div>
 																)}
 															</button>
@@ -268,7 +281,7 @@ export default function GenerateImageModal({ isOpen, onClose, influencerId, onSu
 											onClick={() => fileInputRef.current?.click()}
 											className="w-full py-3 px-4 border-2 border-dashed border-light-300 rounded-lg hover:border-primary-400 hover:bg-primary-50 transition-all flex items-center justify-center gap-2 text-dark-400 hover:text-primary-500"
 										>
-											<ArrowUpTrayIcon className="w-5 h-5" />
+											<UploadIcon size={20} />
 											<span className="text-sm">Upload New Reference Images</span>
 										</button>
 										<input ref={fileInputRef} type="file" accept="image/*" multiple onChange={handleReferenceSelect} className="hidden" />
@@ -285,7 +298,7 @@ export default function GenerateImageModal({ isOpen, onClose, influencerId, onSu
 																onClick={() => removeReferenceFile(index)}
 																className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
 															>
-																<TrashIcon className="w-4 h-4 text-white" />
+																<DeleteIcon size={16} className="text-white" />
 															</button>
 														</div>
 													))}
@@ -322,12 +335,12 @@ export default function GenerateImageModal({ isOpen, onClose, influencerId, onSu
 									>
 										{isGenerating ? (
 											<>
-												<SparklesIcon className="w-5 h-5 animate-spin mr-2" />
+												<SparklesIcon size={20} className="animate-spin mr-2" />
 												Generating...
 											</>
 										) : (
 											<>
-												<SparklesIcon className="w-5 h-5 mr-2" />
+												<SparklesIcon size={20} className="mr-2" />
 												Generate Image
 											</>
 										)}
@@ -349,7 +362,7 @@ export default function GenerateImageModal({ isOpen, onClose, influencerId, onSu
 										</motion.div>
 									) : (
 										<div className="text-center p-8">
-											<PhotoIcon className="w-12 h-12 text-dark-400 mx-auto mb-4" />
+											<Image className="w-12 h-12 text-dark-400 mx-auto mb-4" />
 											<p className="text-sm text-dark-400">No image generated yet</p>
 											<p className="text-xs text-dark-400 mt-1">Enter a description and click generate</p>
 										</div>

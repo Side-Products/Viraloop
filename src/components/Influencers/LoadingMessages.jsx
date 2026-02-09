@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { SparklesIcon } from "@heroicons/react/24/outline";
+import { SparklesIcon } from "@/components/ui/sparkles";
 
 const defaultMessages = [
 	"Creating your AI influencer...",
@@ -92,10 +92,10 @@ export default function LoadingMessages({
 								transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
 								className="absolute inset-0 blur-md"
 							>
-								<Icon className="w-9 h-9 text-primary-400" />
+								<Icon size={36} className="text-primary-400" />
 							</motion.div>
 							{/* Main icon */}
-							<Icon className="w-9 h-9 text-primary-500 relative z-10" />
+							<Icon size={36} className="text-primary-500 relative z-10" />
 						</motion.div>
 					</div>
 				</div>

@@ -15,8 +15,8 @@ export default function Posts({ user }) {
 					{/* Header */}
 					<div className="flex items-center justify-between mb-8">
 						<div>
-							<h1 className="text-2xl font-bold text-dark-100">Posts</h1>
-							<p className="text-dark-400 mt-1">Create and manage your video posts</p>
+							<h1 className="text-2xl font-bold text-neutral-900">Posts</h1>
+							<p className="text-neutral-500 mt-1">Create and manage your video posts</p>
 						</div>
 						<button className="btn btn-primary flex items-center gap-2">
 							<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -30,7 +30,7 @@ export default function Posts({ user }) {
 					<div className="flex flex-wrap items-center gap-4 mb-6">
 						<div className="flex-1 min-w-[200px] max-w-md">
 							<div className="relative">
-								<svg className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-dark-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<svg className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 									<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
 								</svg>
 								<input
@@ -62,8 +62,8 @@ export default function Posts({ user }) {
 								<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
 							</svg>
 						</div>
-						<h3 className="text-xl font-semibold text-dark-100 mb-2">No posts yet</h3>
-						<p className="text-dark-400 mb-6 max-w-md mx-auto">
+						<h3 className="text-xl font-semibold text-neutral-900 mb-2">No posts yet</h3>
+						<p className="text-neutral-500 mb-6 max-w-md mx-auto">
 							Create your first video post with an AI influencer. Posts can be auto-published to TikTok, Instagram, and YouTube.
 						</p>
 						<button className="btn btn-primary">

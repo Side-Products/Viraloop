@@ -3,20 +3,19 @@ import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import axios from "axios";
 import { NICHES } from "@/config/constants";
-import {
-	XMarkIcon,
-	ArrowLeftIcon,
-	ArrowRightIcon,
-	PhotoIcon,
-	UserIcon,
-	SparklesIcon,
-	SpeakerWaveIcon,
-	CheckIcon,
-	PlayIcon,
-	PauseIcon,
-	MagnifyingGlassIcon,
-} from "@heroicons/react/24/outline";
+import { XIcon } from "@/components/ui/x";
+import { ArrowLeftIcon } from "@/components/ui/arrow-left";
+import { ArrowRightIcon } from "@/components/ui/arrow-right";
+import { UserIcon } from "@/components/ui/user";
+import { SparklesIcon } from "@/components/ui/sparkles";
+import { VolumeIcon } from "@/components/ui/volume";
+import { CheckIcon } from "@/components/ui/check";
+import { PlayIcon } from "@/components/ui/play";
+import { PauseIcon } from "@/components/ui/pause";
+import { SearchIcon } from "@/components/ui/search";
+import { Image } from "lucide-react";
 import LoadingMessages from "./LoadingMessages";
+import { useTrialModal } from "@/store/TrialModalContextProvider";
 
 const STEPS = [
 	{ id: 1, title: "Generate Image", description: "Create your influencer's appearance" },
@@ -29,6 +28,7 @@ export default function CreateInfluencer({ isOpen, onClose, onSuccess, inline = 
 	const [isGenerating, setIsGenerating] = useState(false);
 	const [isCreating, setIsCreating] = useState(false);
 	const [voices, setVoices] = useState([]);
+	const { openTrialModal } = useTrialModal();
 
 	// Form data
 	const [formData, setFormData] = useState({
@@ -101,29 +101,54 @@ export default function CreateInfluencer({ isOpen, onClose, onSuccess, inline = 
 
 		setIsGenerating(true);
 		try {
-			const response = await axios.post("/api/generate-image", {
-				prompt: `Create a realistic image of a beautiful/handsome person based on these instructions. The image should look like a high-quality natural photograph, NOT AI generated. IMPORTANT: Do NOT include any social media UI, app interfaces, Instagram layouts, story frames, overlays, buttons, icons, usernames, or text. Just the person in a clean, natural photograph with no digital overlays or frames. Description: ${formData.imagePrompt}`,
-				imageInputs: formData.referenceImages,
-				outputFormat: "jpg",
-			});
+			const response = await axios.post(
+				"/api/generate-image",
+				{
+					prompt: `Create a realistic image of a beautiful/handsome person based on these instructions. The image should look like a high-quality natural photograph, NOT AI generated. IMPORTANT: Do NOT include any social media UI, app interfaces, Instagram layouts, story frames, overlays, buttons, icons, usernames, or text. Just the person in a clean, natural photograph with no digital overlays or frames. Description: ${formData.imagePrompt}`,
+					imageInputs: formData.referenceImages,
+					outputFormat: "jpg",
+				},
+				{
+					// Don't throw on 4xx errors - we handle them gracefully
+					validateStatus: (status) => status < 500,
+				}
+			);
 
-			if (response.data.success) {
-				setFormData((prev) => ({
-					...prev,
-					imageUrl: response.data.imageUrl,
-				}));
-				toast.success("Image generated successfully");
+			// Handle error responses (4xx status codes)
+			if (!response.data.success) {
+				const errorType = response.data.errorType;
+				const errorMessage = response.data.message;
+
+				if (errorType === "usage_limit_reached" || response.status === 429) {
+					// Show the trial modal instead of just a toast
+					if (onClose) onClose(); // Close the create modal first
+					openTrialModal(errorMessage || "Upgrade your plan to continue generating images");
+				} else {
+					toast.error(errorMessage || "Image generation failed. Using demo image instead.");
+					const placeholderUrl = `https://api.dicebear.com/7.x/personas/svg?seed=${encodeURIComponent(formData.imagePrompt)}&backgroundColor=b6e3f4,c0aede,d1d4f9`;
+					setFormData((prev) => ({
+						...prev,
+						imageUrl: placeholderUrl,
+					}));
+				}
+				return;
 			}
-		} catch (error) {
-			console.error("Image generation error:", error);
 
-			// Fallback to placeholder
+			// Success
+			setFormData((prev) => ({
+				...prev,
+				imageUrl: response.data.imageUrl,
+			}));
+			toast.success("Image generated successfully");
+		} catch (error) {
+			// Only catches network errors and 5xx server errors
+			console.error("Image generation error:", error);
+			toast.error("Failed to connect to image generation service. Please try again.");
 			const placeholderUrl = `https://api.dicebear.com/7.x/personas/svg?seed=${encodeURIComponent(formData.imagePrompt)}&backgroundColor=b6e3f4,c0aede,d1d4f9`;
 			setFormData((prev) => ({
 				...prev,
 				imageUrl: placeholderUrl,
 			}));
-			toast.success("Demo image generated");
 		} finally {
 			setIsGenerating(false);
 		}
@@ -159,7 +184,13 @@ export default function CreateInfluencer({ isOpen, onClose, onSuccess, inline = 
 			}
 		} catch (error) {
 			console.error("Image improvement error:", error);
-			toast.error("Failed to improve image");
+			// Check if it's a usage limit error and show the trial modal
+			if (error.response?.data?.errorType === "usage_limit_reached") {
+				if (onClose) onClose(); // Close the create modal first
+				openTrialModal(error.response?.data?.message || "Upgrade your plan to continue generating images");
+			} else {
+				toast.error(error.response?.data?.message || "Failed to improve image");
+			}
 		} finally {
 			setIsGenerating(false);
 		}
@@ -243,7 +274,7 @@ export default function CreateInfluencer({ isOpen, onClose, onSuccess, inline = 
 						<p className="text-sm text-dark-400">{STEPS[currentStep - 1].description}</p>
 					</div>
 					<button onClick={onClose} className="p-2.5 hover:bg-light-200 rounded-lg transition-all duration-200 group">
-						<XMarkIcon className="w-5 h-5 text-dark-400 group-hover:text-dark-100 transition-colors" />
+						<XIcon size={20} className=" text-dark-400 group-hover:text-dark-100 transition-colors" />
 					</button>
 				</div>
 			)}
@@ -263,7 +294,7 @@ export default function CreateInfluencer({ isOpen, onClose, onSuccess, inline = 
 												: "border-light-400 text-dark-400 bg-light-200"
 									}`}
 								>
-									{currentStep > step.id ? <CheckIcon className="w-5 h-5" /> : <span className="text-sm font-semibold">{step.id}</span>}
+									{currentStep > step.id ? <CheckIcon size={20} /> : <span className="text-sm font-semibold">{step.id}</span>}
 								</div>
 								<div className="hidden sm:block whitespace-nowrap">
 									<div className={`text-sm font-medium transition-colors ${currentStep >= step.id ? "text-dark-100" : "text-dark-400"}`}>
@@ -358,7 +389,7 @@ export default function CreateInfluencer({ isOpen, onClose, onSuccess, inline = 
 												htmlFor="reference-images-upload"
 												className="flex items-center justify-center gap-3 w-full px-4 py-3 bg-light-100 hover:bg-light-200 border border-light-300 rounded-xl cursor-pointer transition-all duration-200 group"
 											>
-												<PhotoIcon className="w-5 h-5 text-dark-400 transition-colors" />
+												<Image className="w-5 h-5 text-dark-400 transition-colors" />
 												<span className="text-sm font-medium text-dark-300 group-hover:text-dark-100 transition-colors">
 													{formData.referenceImages.length > 0
 														? `${formData.referenceImages.length} image${formData.referenceImages.length > 1 ? "s" : ""} selected`
@@ -414,8 +445,8 @@ export default function CreateInfluencer({ isOpen, onClose, onSuccess, inline = 
 												<LoadingMessages isActive={isGenerating} />
 											</motion.div>
 										) : (
-											<div className="text-center p-8">
-												<UserIcon className="w-12 h-12 text-dark-400 mx-auto mb-4" />
+											<div className="flex flex-col items-center justify-center p-8">
+												<UserIcon size={48} className="text-dark-400 mb-4" />
 												<p className="text-sm text-dark-400">No influencer generated yet</p>
 												<p className="text-xs text-dark-400 mt-1">Click "Generate Image" to create</p>
 											</div>
@@ -443,7 +474,7 @@ export default function CreateInfluencer({ isOpen, onClose, onSuccess, inline = 
 													disabled={isGenerating || !improvementPrompt.trim()}
 													className="btn btn-primary px-3"
 												>
-													<SparklesIcon className="w-4 h-4" />
+													<SparklesIcon size={16} />
 												</button>
 											</div>
 										</motion.div>
@@ -459,12 +490,12 @@ export default function CreateInfluencer({ isOpen, onClose, onSuccess, inline = 
 								>
 									{isGenerating ? (
 										<>
-											<SparklesIcon className="w-5 h-5 animate-spin mr-2" />
+											<SparklesIcon size={20} className=" animate-spin mr-2" />
 											Generating...
 										</>
 									) : (
 										<>
-											<SparklesIcon className="w-5 h-5 mr-2" />
+											<SparklesIcon size={20} className=" mr-2" />
 											Generate Image
 										</>
 									)}
@@ -573,7 +604,7 @@ export default function CreateInfluencer({ isOpen, onClose, onSuccess, inline = 
 										<p className="text-sm text-dark-400 mb-2">Voice</p>
 										<div className="bg-white rounded-lg p-3 border border-light-300">
 											<div className="flex items-center gap-2 mb-2">
-												<SpeakerWaveIcon className="w-4 h-4 text-primary-500" />
+												<VolumeIcon size={16} className=" text-primary-500" />
 												<span className="font-medium text-dark-100">{formData.voice?.name}</span>
 											</div>
 											<div className="text-sm text-dark-400">
@@ -603,7 +634,7 @@ export default function CreateInfluencer({ isOpen, onClose, onSuccess, inline = 
 					disabled={currentStep === 1}
 					className="flex items-center gap-2 px-5 py-2.5 bg-white hover:bg-light-200 disabled:opacity-40 disabled:cursor-not-allowed text-dark-100 rounded-lg border border-light-300 transition-all duration-200"
 				>
-					<ArrowLeftIcon className="w-4 h-4" />
+					<ArrowLeftIcon size={16} />
 					<span className="font-medium">Previous</span>
 				</button>
 
@@ -615,7 +646,7 @@ export default function CreateInfluencer({ isOpen, onClose, onSuccess, inline = 
 				{currentStep < STEPS.length ? (
 					<button onClick={goToNextStep} disabled={!isStepValid()} className="btn btn-primary px-6 py-2.5 disabled:opacity-40">
 						<span>Next</span>
-						<ArrowRightIcon className="w-4 h-4 ml-2" />
+						<ArrowRightIcon size={16} className=" ml-2" />
 					</button>
 				) : (
 					<button
@@ -625,7 +656,7 @@ export default function CreateInfluencer({ isOpen, onClose, onSuccess, inline = 
 					>
 						{isCreating ? (
 							<>
-								<SparklesIcon className="w-5 h-5 animate-spin mr-2" />
+								<SparklesIcon size={20} className=" animate-spin mr-2" />
 								Creating...
 							</>
 						) : (
@@ -713,7 +744,7 @@ const VoiceDropList = ({ voices, selectedVoice, setSelectedVoice }) => {
 			{/* Search */}
 			<div className="p-4 border-b border-light-300 bg-light-100">
 				<div className="relative">
-					<MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-dark-400" />
+					<SearchIcon size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-dark-400" />
 					<input
 						type="text"
 						placeholder="Search voices..."
@@ -745,9 +776,9 @@ const VoiceDropList = ({ voices, selectedVoice, setSelectedVoice }) => {
 								}}
 							>
 								{playing === voice.voice_id ? (
-									<PauseIcon className="w-6 h-6 text-primary-500" />
+									<PauseIcon size={24} className=" text-primary-500" />
 								) : (
-									<PlayIcon className="w-6 h-6 text-primary-500" />
+									<PlayIcon size={24} className=" text-primary-500" />
 								)}
 							</button>
 							<div className="flex-grow">

@@ -13,6 +13,22 @@ const nextConfig = {
 	eslint: {
 		ignoreDuringBuilds: true,
 	},
+	async redirects() {
+		return [
+			// Redirect www to non-www
+			{
+				source: "/:path*",
+				has: [
+					{
+						type: "host",
+						value: "www.viraloop.io",
+					},
+				],
+				destination: "https://viraloop.io/:path*",
+				permanent: true,
+			},
+		];
+	},
 	async rewrites() {
 		return [
 			{
@@ -26,15 +42,51 @@ const nextConfig = {
 		];
 	},
 	images: {
-		domains: [
-			"lh3.googleusercontent.com",
-			"replicate.delivery",
-			"s3.wasabisys.com",
-			"exports.viraloop.so",
-			"i.ytimg.com",
-			"pbs.twimg.com",
-			"scontent.cdninstagram.com",
-			"platform-lookaside.fbsbx.com",
+		remotePatterns: [
+			{
+				protocol: "https",
+				hostname: "lh3.googleusercontent.com",
+			},
+			{
+				protocol: "https",
+				hostname: "replicate.delivery",
+			},
+			{
+				protocol: "https",
+				hostname: "s3.wasabisys.com",
+			},
+			{
+				protocol: "https",
+				hostname: "exports.viraloop.so",
+			},
+			{
+				protocol: "https",
+				hostname: "i.ytimg.com",
+			},
+			{
+				protocol: "https",
+				hostname: "pbs.twimg.com",
+			},
+			{
+				protocol: "https",
+				hostname: "scontent.cdninstagram.com",
+			},
+			{
+				protocol: "https",
+				hostname: "platform-lookaside.fbsbx.com",
+			},
+			{
+				protocol: "https",
+				hostname: "images.pexels.com",
+			},
+			{
+				protocol: "https",
+				hostname: "videos.pexels.com",
+			},
+			{
+				protocol: "https",
+				hostname: "api.dicebear.com",
+			},
 		],
 	},
 	webpack: (config, { isServer }) => {

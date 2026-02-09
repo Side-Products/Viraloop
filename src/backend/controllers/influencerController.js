@@ -6,6 +6,7 @@ import Member from "../models/member";
 import ErrorHandler from "@/backend/utils/errorHandler";
 import catchAsyncErrors from "@/backend/middlewares/catchAsyncErrors";
 import { useKlingViaReplicate } from "@/backend/modules/videoGeneration";
+import { checkAndIncrementVideoUsage, checkAndIncrementImageUsage } from "@/backend/middlewares/usageLimits";
 
 // Generate video preview using Kling via Replicate
 const generateInfluencerVideoPreview = async (influencer, imageUrl, actionPrompt, primaryImageId = null) => {
@@ -113,6 +114,38 @@ export const createInfluencer = catchAsyncErrors(async (req, res, next) => {
 	// Validate voice object
 	if (!voice.voice_id || !voice.name) {
 		return next(new ErrorHandler("Please provide complete voice information", 400));
+	}
+
+	// Check team's monthly image limit (creating an influencer creates an image)
+	const imageUsageCheck = await checkAndIncrementImageUsage(teamId);
+	if (!imageUsageCheck.allowed) {
+		return res.status(429).json({
+			success: false,
+			message: imageUsageCheck.message,
+			limitReached: true,
+			limitType: "image",
+			usage: {
+				used: imageUsageCheck.used,
+				limit: imageUsageCheck.limit,
+				remaining: imageUsageCheck.remaining,
+			},
+		});
+	}
+
+	// Check team's monthly video limit (creating an influencer triggers video generation)
+	const videoUsageCheck = await checkAndIncrementVideoUsage(teamId);
+	if (!videoUsageCheck.allowed) {
+		return res.status(429).json({
+			success: false,
+			message: videoUsageCheck.message,
+			limitReached: true,
+			limitType: "video",
+			usage: {
+				used: videoUsageCheck.used,
+				limit: videoUsageCheck.limit,
+				remaining: videoUsageCheck.remaining,
+			},
+		});
 	}
 
 	const influencer = await Influencer.create({

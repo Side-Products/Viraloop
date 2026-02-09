@@ -8,7 +8,7 @@ export default function Dashboard({ user }) {
 	const [stats, setStats] = useState({
 		totalInfluencers: 0,
 		totalPosts: 0,
-		activeSchedules: 0,
+		activeLoops: 0,
 		credits: 0,
 	});
 	const [loading, setLoading] = useState(true);
@@ -40,8 +40,8 @@ export default function Dashboard({ user }) {
 			<DashboardLayout>
 				<div className="p-6">
 					<div className="mb-8">
-						<h1 className="text-2xl font-bold text-dark-100">Welcome back, {user?.name || "Creator"}!</h1>
-						<p className="text-dark-400 mt-1">Here&apos;s what&apos;s happening with your AI influencers</p>
+						<h1 className="text-2xl font-bold text-neutral-900">Welcome back, {user?.name || "Creator"}!</h1>
+						<p className="text-neutral-500 mt-1">Here&apos;s what&apos;s happening with your AI influencers</p>
 					</div>
 
 					{/* Quick Stats */}
@@ -49,9 +49,14 @@ export default function Dashboard({ user }) {
 						<div className="card p-6">
 							<div className="flex items-center justify-between">
 								<div>
-									<p className="text-dark-400 text-sm">Total Influencers</p>
-									<p className="text-3xl font-bold text-dark-100 mt-1">
-										{loading ? <span className="animate-pulse">—</span> : stats.totalInfluencers}
+									<p className="text-neutral-500 text-sm">Total Influencers</p>
+									<p className="text-3xl font-bold text-neutral-900 mt-1 min-h-[36px] flex items-center">
+										{loading ? (
+											<svg className="animate-spin h-6 w-6 text-neutral-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+												<circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+												<path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+											</svg>
+										) : stats.totalInfluencers}
 									</p>
 								</div>
 								<div className="w-12 h-12 bg-primary-100 rounded-xl flex items-center justify-center">
@@ -65,9 +70,14 @@ export default function Dashboard({ user }) {
 						<div className="card p-6">
 							<div className="flex items-center justify-between">
 								<div>
-									<p className="text-dark-400 text-sm">Total Posts</p>
-									<p className="text-3xl font-bold text-dark-100 mt-1">
-										{loading ? <span className="animate-pulse">—</span> : stats.totalPosts}
+									<p className="text-neutral-500 text-sm">Total Posts</p>
+									<p className="text-3xl font-bold text-neutral-900 mt-1 min-h-[36px] flex items-center">
+										{loading ? (
+											<svg className="animate-spin h-6 w-6 text-neutral-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+												<circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+												<path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+											</svg>
+										) : stats.totalPosts}
 									</p>
 								</div>
 								<div className="w-12 h-12 bg-success-100 rounded-xl flex items-center justify-center">
@@ -81,9 +91,14 @@ export default function Dashboard({ user }) {
 						<div className="card p-6">
 							<div className="flex items-center justify-between">
 								<div>
-									<p className="text-dark-400 text-sm">Active Schedules</p>
-									<p className="text-3xl font-bold text-dark-100 mt-1">
-										{loading ? <span className="animate-pulse">—</span> : stats.activeSchedules}
+									<p className="text-neutral-500 text-sm">Active Loops</p>
+									<p className="text-3xl font-bold text-neutral-900 mt-1 min-h-[36px] flex items-center">
+										{loading ? (
+											<svg className="animate-spin h-6 w-6 text-neutral-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+												<circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+												<path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+											</svg>
+										) : stats.activeLoops}
 									</p>
 								</div>
 								<div className="w-12 h-12 bg-info-100 rounded-xl flex items-center justify-center">
@@ -97,9 +112,14 @@ export default function Dashboard({ user }) {
 						<div className="card p-6">
 							<div className="flex items-center justify-between">
 								<div>
-									<p className="text-dark-400 text-sm">Credits</p>
-									<p className="text-3xl font-bold text-dark-100 mt-1">
-										{loading ? <span className="animate-pulse">—</span> : stats.credits}
+									<p className="text-neutral-500 text-sm">Credits</p>
+									<p className="text-3xl font-bold text-neutral-900 mt-1 min-h-[36px] flex items-center">
+										{loading ? (
+											<svg className="animate-spin h-6 w-6 text-neutral-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+												<circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+												<path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+											</svg>
+										) : stats.credits}
 									</p>
 								</div>
 								<div className="w-12 h-12 bg-warning-100 rounded-xl flex items-center justify-center">
@@ -113,7 +133,7 @@ export default function Dashboard({ user }) {
 
 					{/* Quick Actions */}
 					<div className="mb-8">
-						<h2 className="text-lg font-semibold text-dark-100 mb-4">Quick Actions</h2>
+						<h2 className="text-lg font-semibold text-neutral-900 mb-4">Quick Actions</h2>
 						<div className="grid grid-cols-1 md:grid-cols-3 gap-4">
 							<a href="/influencers" className="card p-4 hover:border-primary-300 transition-colors cursor-pointer group">
 								<div className="flex items-center gap-4">
@@ -123,8 +143,8 @@ export default function Dashboard({ user }) {
 										</svg>
 									</div>
 									<div>
-										<p className="font-medium text-dark-100">Create Influencer</p>
-										<p className="text-sm text-dark-400">Generate a new AI influencer</p>
+										<p className="font-medium text-neutral-900">Create Influencer</p>
+										<p className="text-sm text-neutral-500">Generate a new AI influencer</p>
 									</div>
 								</div>
 							</a>
@@ -137,8 +157,8 @@ export default function Dashboard({ user }) {
 										</svg>
 									</div>
 									<div>
-										<p className="font-medium text-dark-100">Create Post</p>
-										<p className="text-sm text-dark-400">Generate a new video post</p>
+										<p className="font-medium text-neutral-900">Create Post</p>
+										<p className="text-sm text-neutral-500">Generate a new video post</p>
 									</div>
 								</div>
 							</a>
@@ -151,8 +171,8 @@ export default function Dashboard({ user }) {
 										</svg>
 									</div>
 									<div>
-										<p className="font-medium text-dark-100">Connect Accounts</p>
-										<p className="text-sm text-dark-400">Link your social media</p>
+										<p className="font-medium text-neutral-900">Connect Accounts</p>
+										<p className="text-sm text-neutral-500">Link your social media</p>
 									</div>
 								</div>
 							</a>
@@ -161,27 +181,27 @@ export default function Dashboard({ user }) {
 
 					{/* Getting Started */}
 					<div className="card p-6">
-						<h2 className="text-lg font-semibold text-dark-100 mb-4">Getting Started</h2>
+						<h2 className="text-lg font-semibold text-neutral-900 mb-4">Getting Started</h2>
 						<div className="space-y-4">
 							<div className="flex items-center gap-4">
 								<div className="w-8 h-8 bg-primary-500 text-white rounded-full flex items-center justify-center text-sm font-medium">1</div>
 								<div>
-									<p className="font-medium text-dark-100">Create your first AI influencer</p>
-									<p className="text-sm text-dark-400">Generate a unique AI character with custom appearance and voice</p>
+									<p className="font-medium text-neutral-900">Create your first AI influencer</p>
+									<p className="text-sm text-neutral-500">Generate a unique AI character with custom appearance and voice</p>
 								</div>
 							</div>
 							<div className="flex items-center gap-4">
-								<div className="w-8 h-8 bg-light-300 text-dark-300 rounded-full flex items-center justify-center text-sm font-medium">2</div>
+								<div className="w-8 h-8 bg-light-300 text-neutral-600 rounded-full flex items-center justify-center text-sm font-medium">2</div>
 								<div>
-									<p className="font-medium text-dark-300">Connect your social accounts</p>
-									<p className="text-sm text-dark-400">Link TikTok, Instagram, and YouTube for auto-posting</p>
+									<p className="font-medium text-neutral-600">Connect your social accounts</p>
+									<p className="text-sm text-neutral-500">Link TikTok, Instagram, and YouTube for auto-posting</p>
 								</div>
 							</div>
 							<div className="flex items-center gap-4">
-								<div className="w-8 h-8 bg-light-300 text-dark-300 rounded-full flex items-center justify-center text-sm font-medium">3</div>
+								<div className="w-8 h-8 bg-light-300 text-neutral-600 rounded-full flex items-center justify-center text-sm font-medium">3</div>
 								<div>
-									<p className="font-medium text-dark-300">Create and schedule posts</p>
-									<p className="text-sm text-dark-400">Generate videos and set up automatic posting schedules</p>
+									<p className="font-medium text-neutral-600">Create and schedule posts</p>
+									<p className="text-sm text-neutral-500">Generate videos and set up automatic posting schedules</p>
 								</div>
 							</div>
 						</div>
