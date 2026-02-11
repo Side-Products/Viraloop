@@ -85,13 +85,41 @@ const stripeWebhook = catchAsyncErrors(async (req, res) => {
  * Update team limits based on subscription plan
  */
 const updateTeamLimits = async (teamId, stripePriceId) => {
+	console.log("\n--- Updating Team Limits ---");
+	console.log("Team ID:", teamId);
+	console.log("Stripe Price ID:", stripePriceId);
+
 	const limits = getPlanLimitsFromStripePriceId(stripePriceId);
-	await Team.findByIdAndUpdate(teamId, {
-		influencerLimit: limits.influencers,
-		imageLimit: limits.imagesPerMonth,
-		videoLimit: limits.videosPerMonth,
-	});
-	console.log(`Updated team ${teamId} limits: ${limits.influencers} influencers, ${limits.imagesPerMonth} images/month, ${limits.videosPerMonth} videos/month`);
+	console.log("Resolved limits:", JSON.stringify(limits, null, 2));
+
+	if (limits.influencers === 0 && limits.imagesPerMonth === 0 && limits.videosPerMonth === 0) {
+		console.log("⚠️ Warning: All limits are 0 - price ID may not match any plan!");
+	}
+
+	const updatedTeam = await Team.findByIdAndUpdate(
+		teamId,
+		{
+			influencerLimit: limits.influencers,
+			imageLimit: limits.imagesPerMonth,
+			videoLimit: limits.videosPerMonth,
+			// Reset usage counts for new subscription
+			imagesUsedThisMonth: 0,
+			videosUsedThisMonth: 0,
+			usagePeriodStart: new Date(),
+		},
+		{ new: true }
+	);
+
+	if (updatedTeam) {
+		console.log(`✅ Updated team ${teamId} limits:`);
+		console.log(`   - Influencers: ${updatedTeam.influencerLimit}`);
+		console.log(`   - Images/month: ${updatedTeam.imageLimit}`);
+		console.log(`   - Videos/month: ${updatedTeam.videoLimit}`);
+	} else {
+		console.log(`❌ Team ${teamId} not found!`);
+	}
+
+	return updatedTeam;
 };
 
 const stripeWebhookCheckoutSessionCompleted = catchAsyncErrors(async (req, res, eventData) => {
@@ -99,18 +127,40 @@ const stripeWebhookCheckoutSessionCompleted = catchAsyncErrors(async (req, res, 
 		const session = eventData.object;
 		const isOneTime = session.metadata?.isOneTime === "true";
 
+		console.log("\n========== CHECKOUT SESSION COMPLETED ==========");
+		console.log("Session ID:", session.id);
+		console.log("Payment Status:", session.payment_status);
+		console.log("Mode:", session.mode);
+		console.log("Is One-Time:", isOneTime);
+		console.log("Subscription ID:", session.subscription);
+		console.log("Client Reference ID:", session.client_reference_id);
+		console.log("Metadata:", JSON.stringify(session.metadata, null, 2));
+
 		// Handle one-time payment (e.g., $1 trial)
 		if (isOneTime || !session.subscription) {
+			console.log("\n--- Processing One-Time Payment (Trial) ---");
+
 			const user = await User.findById(session.client_reference_id);
+			console.log("User found:", !!user, user?.email);
+
 			if (user) {
 				await createOrGetCustomer(user.email);
 			}
 
 			// Update team limits directly for one-time payment
 			const stripePriceId = session.metadata?.stripePriceId;
-			if (session.metadata?.team && stripePriceId) {
-				await updateTeamLimits(session.metadata.team, stripePriceId);
-				console.log(`One-time payment processed for team ${session.metadata.team}`);
+			const teamId = session.metadata?.team;
+
+			console.log("Team ID from metadata:", teamId);
+			console.log("Price ID from metadata:", stripePriceId);
+
+			if (teamId && stripePriceId) {
+				await updateTeamLimits(teamId, stripePriceId);
+				console.log(`✅ One-time payment processed successfully for team ${teamId}`);
+				console.log("========== END CHECKOUT SESSION ==========\n");
+			} else {
+				console.log("⚠️ Missing team ID or price ID in metadata - limits NOT updated!");
+				console.log("========== END CHECKOUT SESSION (INCOMPLETE) ==========\n");
 			}
 
 			return res.status(200).json({

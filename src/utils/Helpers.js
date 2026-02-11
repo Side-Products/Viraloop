@@ -108,19 +108,37 @@ export const getSubscriptionPeriodFromStripePriceId = (stripePriceId, version) =
  * Returns { influencers, imagesPerMonth, videosPerMonth, platforms }
  */
 export const getPlanLimitsFromStripePriceId = (stripePriceId) => {
+	console.log("[getPlanLimitsFromStripePriceId] Looking up limits for price ID:", stripePriceId);
+
 	if (!stripePriceId) {
+		console.log("[getPlanLimitsFromStripePriceId] No price ID provided, returning zeros");
 		return { influencers: 0, imagesPerMonth: 0, videosPerMonth: 0, platforms: 0 }; // No access without payment
 	}
 
-	const subscriptionData = findSubscriptionByStripePriceId(stripePriceId, getObjectWithHighestKey(subscriptionPlans));
+	const plans = getObjectWithHighestKey(subscriptionPlans);
+	const subscriptionData = findSubscriptionByStripePriceId(stripePriceId, plans);
+
 	if (subscriptionData) {
-		return {
+		const limits = {
 			influencers: subscriptionData.influencers,
 			imagesPerMonth: subscriptionData.imagesPerMonth,
 			videosPerMonth: subscriptionData.videosPerMonth,
 			platforms: subscriptionData.platforms,
 		};
+		console.log("[getPlanLimitsFromStripePriceId] Found plan:", subscriptionData.name, "Limits:", limits);
+		return limits;
 	}
+
+	console.log("[getPlanLimitsFromStripePriceId] No matching plan found for price ID:", stripePriceId);
+	console.log("[getPlanLimitsFromStripePriceId] Available plans:", {
+		trial: plans.trialSubscription?.monthly?.stripePriceId,
+		growthMonthly: plans.growthSubscription?.monthly?.stripePriceId,
+		growthAnnual: plans.growthSubscription?.annual?.stripePriceId,
+		proMonthly: plans.proSubscription?.monthly?.stripePriceId,
+		proAnnual: plans.proSubscription?.annual?.stripePriceId,
+		ultraMonthly: plans.ultraSubscription?.monthly?.stripePriceId,
+		ultraAnnual: plans.ultraSubscription?.annual?.stripePriceId,
+	});
 
 	return { influencers: 0, imagesPerMonth: 0, videosPerMonth: 0, platforms: 0 };
 };
