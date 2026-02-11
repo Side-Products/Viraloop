@@ -54,8 +54,8 @@ handler.use(isAuthenticatedUser).post(async (req, res) => {
 		if (!usageCheck.allowed) {
 			console.log("ERROR: Usage limit reached");
 			const limitMessage = usageCheck.limit === 0
-				? "Your plan doesn't include image generation. Please upgrade to access this feature."
-				: `Monthly image limit reached (${usageCheck.used}/${usageCheck.limit}). Please upgrade your plan.`;
+				? "Unlock AI content creation tools to create stunning visuals for your influencer."
+				: `You've used all ${usageCheck.limit} images this month. Upgrade to keep creating.`;
 			throw new ErrorHandler(limitMessage, 429, "usage_limit_reached");
 		}
 

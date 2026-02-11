@@ -141,35 +141,88 @@ const createPaymentIntent = catchAsyncErrors(async (req, res) => {
 });
 
 const applyPromoCode = catchAsyncErrors(async (req, res) => {
-	const { promoCode } = req.body;
+	const { promoCode, paymentIntentId, originalAmount } = req.body;
 
-	// Retrieve the promotion code
-	const promotionCode = await stripe.promotionCodes.list({
-		code: promoCode,
-		limit: 1,
-	});
+	try {
+		// Retrieve the promotion code
+		const promotionCode = await stripe.promotionCodes.list({
+			code: promoCode,
+			limit: 1,
+		});
 
-	if (!promotionCode.data.length) {
-		return res.status(200).json({ success: false, message: "Invalid promo code." });
+		if (!promotionCode.data.length) {
+			return res.status(200).json({ success: false, message: "Invalid promo code." });
+		}
+
+		const promoData = promotionCode.data[0];
+
+		// Check if coupon exists on the promotion code (can be directly on object or nested under promotion)
+		const couponId = promoData.coupon?.id || promoData.promotion?.coupon;
+
+		if (!couponId) {
+			return res.status(200).json({ success: false, message: "Promo code has no associated discount." });
+		}
+
+		// Retrieve the full coupon object
+		const coupon = await stripe.coupons.retrieve(couponId);
+
+		if (!coupon || !coupon.valid) {
+			return res.status(200).json({ success: false, message: "Invalid or expired promo code." });
+		}
+
+		// Calculate the discounted amount
+		let discountedAmount = originalAmount;
+		let discountAmount = 0;
+
+		if (coupon.percent_off) {
+			discountAmount = Math.round(originalAmount * (coupon.percent_off / 100));
+			discountedAmount = originalAmount - discountAmount;
+		} else if (coupon.amount_off) {
+			discountAmount = coupon.amount_off;
+			discountedAmount = Math.max(0, originalAmount - coupon.amount_off);
+		}
+
+		// Stripe minimum charge is $0.50 (50 cents)
+		const STRIPE_MINIMUM_AMOUNT = 50;
+
+		// If discount makes it free or below minimum, cancel the PaymentIntent
+		// and mark as free trial
+		if (discountedAmount < STRIPE_MINIMUM_AMOUNT) {
+			if (paymentIntentId) {
+				await stripe.paymentIntents.cancel(paymentIntentId);
+			}
+
+			return res.status(200).json({
+				success: true,
+				message: "Promo code applied! Your trial is now free.",
+				coupon,
+				originalAmount,
+				discountAmount: originalAmount, // Full discount
+				discountedAmount: 0,
+				isFree: true,
+			});
+		}
+
+		// Update the PaymentIntent with the new amount if we have a paymentIntentId
+		if (paymentIntentId && discountedAmount !== originalAmount) {
+			await stripe.paymentIntents.update(paymentIntentId, {
+				amount: discountedAmount,
+			});
+		}
+
+		return res.status(200).json({
+			success: true,
+			message: "Promo code applied successfully.",
+			coupon,
+			originalAmount,
+			discountAmount,
+			discountedAmount,
+			isFree: false,
+		});
+	} catch (error) {
+		console.error("Error applying promo code:", error);
+		return res.status(200).json({ success: false, message: error.message || "Failed to apply promo code." });
 	}
-
-	const couponId = promotionCode.data[0].coupon.id;
-
-	// Validate the coupon
-	const coupon = await stripe.coupons.retrieve(couponId);
-
-	if (!coupon || !coupon.valid) {
-		return res.status(200).json({ success: false, message: "Invalid or expired promo code." });
-	}
-
-	// If the coupon is valid, apply it to the customer
-	const customer = await createOrGetCustomer(req.user.email);
-
-	await stripe.customers.update(customer.id, {
-		coupon: couponId,
-	});
-
-	return res.status(200).json({ success: true, message: "Promo code applied successfully.", coupon });
 });
 
 export {
