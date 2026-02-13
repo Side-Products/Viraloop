@@ -8,7 +8,17 @@ import {
 	ultraPlanMonthly,
 	ultraPlanAnnual,
 	CURRENT_SUBSCRIPTION_VERSION,
+	SUBSCRIPTION_CREDITS,
 } from "../config/constants";
+
+// Plan tier names (without billing period)
+export const PLAN_TIERS = {
+	FREE: "Free",
+	TRIAL: "Trial",
+	GROWTH: "Growth",
+	PRO: "Pro",
+	ULTRA: "Ultra",
+};
 
 /**
  * Get the highest key from an object (for versioned subscription plans)
@@ -105,14 +115,14 @@ export const getSubscriptionPeriodFromStripePriceId = (stripePriceId, version) =
 
 /**
  * Get plan limits from Stripe price ID
- * Returns { influencers, imagesPerMonth, videosPerMonth, platforms }
+ * Returns { influencers, images, videos, platforms }
  */
 export const getPlanLimitsFromStripePriceId = (stripePriceId) => {
 	console.log("[getPlanLimitsFromStripePriceId] Looking up limits for price ID:", stripePriceId);
 
 	if (!stripePriceId) {
 		console.log("[getPlanLimitsFromStripePriceId] No price ID provided, returning zeros");
-		return { influencers: 0, imagesPerMonth: 0, videosPerMonth: 0, platforms: 0 }; // No access without payment
+		return { influencers: 0, images: 0, videos: 0, platforms: [] };
 	}
 
 	const plans = getObjectWithHighestKey(subscriptionPlans);
@@ -121,8 +131,8 @@ export const getPlanLimitsFromStripePriceId = (stripePriceId) => {
 	if (subscriptionData) {
 		const limits = {
 			influencers: subscriptionData.influencers,
-			imagesPerMonth: subscriptionData.imagesPerMonth,
-			videosPerMonth: subscriptionData.videosPerMonth,
+			images: subscriptionData.images,
+			videos: subscriptionData.videos,
 			platforms: subscriptionData.platforms,
 		};
 		console.log("[getPlanLimitsFromStripePriceId] Found plan:", subscriptionData.name, "Limits:", limits);
@@ -140,7 +150,7 @@ export const getPlanLimitsFromStripePriceId = (stripePriceId) => {
 		ultraAnnual: plans.ultraSubscription?.annual?.stripePriceId,
 	});
 
-	return { influencers: 0, imagesPerMonth: 0, videosPerMonth: 0, platforms: 0 };
+	return { influencers: 0, images: 0, videos: 0, platforms: [] };
 };
 
 /**
@@ -221,4 +231,72 @@ export const getSubscriptionPlanName = (plan) => {
 	}
 
 	return plan;
+};
+
+/**
+ * Extract the plan tier name from a full plan name (e.g., "Growth (monthly)" -> "Growth")
+ * Also handles direct tier names like "Growth", "Pro", etc.
+ */
+export const getPlanTierName = (planName) => {
+	if (!planName) return null;
+
+	const lowerPlan = planName.toLowerCase();
+
+	if (lowerPlan.includes("ultra")) return PLAN_TIERS.ULTRA;
+	if (lowerPlan.includes("pro")) return PLAN_TIERS.PRO;
+	if (lowerPlan.includes("growth")) return PLAN_TIERS.GROWTH;
+	if (lowerPlan.includes("trial")) return PLAN_TIERS.TRIAL;
+
+	return null;
+};
+
+/**
+ * Get the current plan tier for a team
+ * Checks subscription first, then falls back to inferring from influencer limits
+ * @param {Object} team - The team object from TeamContext
+ * @returns {{ tier: string, maxCredits: number, isFromSubscription: boolean }}
+ */
+export const getTeamPlanInfo = (team) => {
+	if (!team) {
+		return {
+			tier: PLAN_TIERS.FREE,
+			maxCredits: 0,
+			isFromSubscription: false,
+		};
+	}
+
+	// First, try to get tier from subscription
+	if (team.subscription?.plan) {
+		const tier = getPlanTierName(team.subscription.plan);
+		if (tier) {
+			const creditsKey = tier.toLowerCase();
+			return {
+				tier,
+				maxCredits: SUBSCRIPTION_CREDITS[creditsKey] || SUBSCRIPTION_CREDITS.trial,
+				isFromSubscription: true,
+			};
+		}
+	}
+
+	// Fallback: infer from influencer limit
+	if (team.influencerLimit >= 50) {
+		return { tier: PLAN_TIERS.ULTRA, maxCredits: SUBSCRIPTION_CREDITS.ultra, isFromSubscription: false };
+	}
+	if (team.influencerLimit >= 15) {
+		return { tier: PLAN_TIERS.PRO, maxCredits: SUBSCRIPTION_CREDITS.pro, isFromSubscription: false };
+	}
+	if (team.influencerLimit >= 5) {
+		return { tier: PLAN_TIERS.GROWTH, maxCredits: SUBSCRIPTION_CREDITS.growth, isFromSubscription: false };
+	}
+	// Trial has 3 influencers
+	if (team.influencerLimit >= 3) {
+		return { tier: PLAN_TIERS.TRIAL, maxCredits: SUBSCRIPTION_CREDITS.trial, isFromSubscription: false };
+	}
+
+	// Default to Free (no plan purchased)
+	return {
+		tier: PLAN_TIERS.FREE,
+		maxCredits: 0,
+		isFromSubscription: false,
+	};
 };

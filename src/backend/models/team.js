@@ -31,31 +31,6 @@ const teamSchema = new mongoose.Schema(
 			type: Number,
 			default: 0, // No access without payment
 		},
-		imageLimit: {
-			type: Number,
-			default: 0, // No access without payment
-		},
-		videoLimit: {
-			type: Number,
-			default: 0, // No access without payment
-		},
-		// Monthly usage tracking (team-wide, not per influencer)
-		imagesUsedThisMonth: {
-			type: Number,
-			default: 0,
-		},
-		videosUsedThisMonth: {
-			type: Number,
-			default: 0,
-		},
-		usagePeriodStart: {
-			type: Date,
-			default: Date.now,
-		},
-		postLimit: {
-			type: Number,
-			default: 0, // Deprecated - kept for backwards compatibility
-		},
 		// API key overrides
 		OPENAI_API_KEY: {
 			type: String,

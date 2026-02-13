@@ -15,6 +15,7 @@ import { InstagramIcon } from "@/components/ui/instagram";
 import { ChartSplineIcon } from "@/components/ui/chart-spline";
 import { SettingsIcon } from "@/components/ui/settings";
 import { LogoutIcon } from "@/components/ui/logout";
+import { GiftIcon } from "@/components/ui/gift";
 
 export default function DashboardLayout({ children }) {
 	const router = useRouter();
@@ -30,10 +31,11 @@ export default function DashboardLayout({ children }) {
 	const calendarIconRef = useRef(null);
 	const accountsIconRef = useRef(null);
 	const analyticsIconRef = useRef(null);
+	const spinAndWinIconRef = useRef(null);
 	const settingsIconRef = useRef(null);
 	const logoutIconRef = useRef(null);
 
-	const isActive = (href) => router.pathname === href;
+	const isActive = (href) => router.pathname === href || router.pathname.startsWith(`${href}/`);
 
 	const handleTeamChange = (selectedTeam) => {
 		if (selectedTeam && selectedTeam._id !== currentTeam?._id) {
@@ -152,6 +154,17 @@ export default function DashboardLayout({ children }) {
 						>
 							<ChartSplineIcon ref={analyticsIconRef} size={20} />
 							<span className="font-medium">Analytics</span>
+						</Link>
+						<Link
+							href="/spin-and-win"
+							className={`font-secondary text-sm font-regular flex items-center gap-3 px-3 py-2 rounded transition-colors cursor-pointer ${
+								isActive("/spin-and-win") ? "bg-primary-200/70 text-primary-400" : "hover:bg-neutral-200/70 hover:text-dark-100"
+							}`}
+							onMouseEnter={() => spinAndWinIconRef.current?.startAnimation()}
+							onMouseLeave={() => spinAndWinIconRef.current?.stopAnimation()}
+						>
+							<GiftIcon ref={spinAndWinIconRef} size={20} />
+							<span className="font-medium">Spin & Win</span>
 						</Link>
 					</nav>
 

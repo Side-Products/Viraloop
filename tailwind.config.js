@@ -28,7 +28,8 @@ module.exports = {
     			pulse: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
     			spin: 'spin 1s linear infinite',
     			'scroll-left': 'scroll-left linear infinite',
-    			'scroll-right': 'scroll-right linear infinite'
+    			'scroll-right': 'scroll-right linear infinite',
+    			gradient: 'gradient 8s linear infinite'
     		},
     		keyframes: {
     			text: {
@@ -63,6 +64,17 @@ module.exports = {
     				},
     				'100%': {
     					transform: 'translateX(0)'
+    				}
+    			},
+    			gradient: {
+    				'0%': {
+    					'background-position': '0% 50%'
+    				},
+    				'50%': {
+    					'background-position': '100% 50%'
+    				},
+    				'100%': {
+    					'background-position': '0% 50%'
     				}
     			}
     		},

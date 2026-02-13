@@ -25,28 +25,50 @@ export const ultraPlanAnnual = "Ultra (annual)";
 // Current subscription version
 export const CURRENT_SUBSCRIPTION_VERSION = 1;
 
-// Versioned subscription plans (following faceless pattern)
-export const subscriptionPlans = {
-	// Version 1: Pricing structure
-	// Trial: $1 one-time - 1 influencer, 1 image, 1 video
-	// Growth: $39/mo - 5 influencers, 40 images, 30 videos
-	// Pro: $69/mo - 15 influencers, 70 images, 60 videos
-	// Ultra: $99/mo - 50 influencers, 100 images, 100 videos
+// =====================
+// CREDIT SYSTEM (defined early so subscription plans can reference these)
+// =====================
+
+// Credit pricing
+export const PRICE_PER_CREDIT = 0.1; // $0.10 per credit
+
+// Credit costs for operations
+export const CREDITS_REQUIRED = {
+	IMAGE_GENERATION: 3,
+	VIDEO_GENERATION_KLING: 10,
+	VIDEO_GENERATION_VEO_FAST: 15,
+	VIDEO_GENERATION_VEO_QUALITY: 30,
+	TTS_GENERATION: 2,
+	INFLUENCER_CREATION: 5,
+};
+
+// Credits per subscription tier (monthly)
+export const SUBSCRIPTION_CREDITS = {
+	trial: 20, // One-time
+	growth: 300, // Monthly
+	pro: 700, // Monthly
+	ultra: 1000, // Monthly
+};
+
+// Helper to calculate images/videos from credits
+const calcImages = (credits) => Math.floor(credits / CREDITS_REQUIRED.IMAGE_GENERATION);
+const calcVideos = (credits) => Math.floor(credits / CREDITS_REQUIRED.VIDEO_GENERATION_VEO_FAST);
+
+// Production Stripe Price IDs (Live mode)
+const productionSubscriptionPlans = {
 	1: {
-		// Trial: $1 one-time - 1 influencer, 1 image, 1 video
 		trialSubscription: {
 			monthly: {
 				name: "Trial",
 				price: 1,
 				stripePriceId: "price_1SyuIo480cIYlJtw77WJVmRe",
-				isOneTime: true, // One-time purchase, not recurring
+				isOneTime: true,
 				influencers: 1,
-				imagesPerMonth: 1,
-				videosPerMonth: 1,
-				platforms: 1,
+				images: 1,
+				videos: 1,
+				platforms: ["tiktok"],
 			},
 		},
-		// Growth: $39/mo - 5 influencers, 40 images, 30 videos
 		growthSubscription: {
 			monthly: {
 				name: "Growth (monthly)",
@@ -55,24 +77,23 @@ export const subscriptionPlans = {
 				stripePriceId: "price_1SyuLS480cIYlJtwyCAgy8bb",
 				validForDays: 30,
 				influencers: 5,
-				imagesPerMonth: 40,
-				videosPerMonth: 30,
-				platforms: 2,
+				images: calcImages(SUBSCRIPTION_CREDITS.growth),
+				videos: calcVideos(SUBSCRIPTION_CREDITS.growth),
+				platforms: ["tiktok", "instagram", "youtube"],
 			},
 			annual: {
 				name: "Growth (annual)",
-				price: 32, // ~$390/year = ~$32/mo
+				price: 32,
 				originalPrice: 49,
 				pricePerYear: 390,
 				stripePriceId: "price_1SyuLS480cIYlJtwbfB4U3wU",
 				validForDays: 365,
 				influencers: 5,
-				imagesPerMonth: 40,
-				videosPerMonth: 30,
-				platforms: 2,
+				images: calcImages(SUBSCRIPTION_CREDITS.growth),
+				videos: calcVideos(SUBSCRIPTION_CREDITS.growth),
+				platforms: ["tiktok", "instagram", "youtube"],
 			},
 		},
-		// Pro: $69/mo - 15 influencers, 70 images, 60 videos
 		proSubscription: {
 			monthly: {
 				name: "Pro (monthly)",
@@ -81,24 +102,23 @@ export const subscriptionPlans = {
 				stripePriceId: "price_1SyuMD480cIYlJtwVb367Kie",
 				validForDays: 30,
 				influencers: 15,
-				imagesPerMonth: 70,
-				videosPerMonth: 60,
-				platforms: 3,
+				images: calcImages(SUBSCRIPTION_CREDITS.pro),
+				videos: calcVideos(SUBSCRIPTION_CREDITS.pro),
+				platforms: ["tiktok", "instagram", "youtube"],
 			},
 			annual: {
 				name: "Pro (annual)",
-				price: 57, // ~$690/year = ~$57/mo
+				price: 57,
 				originalPrice: 107,
 				pricePerYear: 690,
 				stripePriceId: "price_1SyuMD480cIYlJtwp5evP1E5",
 				validForDays: 365,
 				influencers: 15,
-				imagesPerMonth: 70,
-				videosPerMonth: 60,
-				platforms: 3,
+				images: calcImages(SUBSCRIPTION_CREDITS.pro),
+				videos: calcVideos(SUBSCRIPTION_CREDITS.pro),
+				platforms: ["tiktok", "instagram", "youtube"],
 			},
 		},
-		// Ultra: $99/mo - 50 influencers, 100 images, 100 videos
 		ultraSubscription: {
 			monthly: {
 				name: "Ultra (monthly)",
@@ -107,39 +127,159 @@ export const subscriptionPlans = {
 				stripePriceId: "price_1SyuMu480cIYlJtw174Srzq2",
 				validForDays: 30,
 				influencers: 50,
-				imagesPerMonth: 100,
-				videosPerMonth: 100,
-				platforms: 3,
+				images: calcImages(SUBSCRIPTION_CREDITS.ultra),
+				videos: calcVideos(SUBSCRIPTION_CREDITS.ultra),
+				platforms: ["tiktok", "instagram", "youtube"],
 			},
 			annual: {
 				name: "Ultra (annual)",
-				price: 82, // ~$990/year = ~$82/mo
+				price: 82,
 				originalPrice: 166,
 				pricePerYear: 990,
 				stripePriceId: "price_1SyuMu480cIYlJtw670ddsS3",
 				validForDays: 365,
 				influencers: 50,
-				imagesPerMonth: 100,
-				videosPerMonth: 100,
-				platforms: 3,
+				images: calcImages(SUBSCRIPTION_CREDITS.ultra),
+				videos: calcVideos(SUBSCRIPTION_CREDITS.ultra),
+				platforms: ["tiktok", "instagram", "youtube"],
 			},
 		},
 	},
 };
 
+// Sandbox Stripe Price IDs (Test mode) - Replace with your Stripe test mode price IDs
+const sandboxSubscriptionPlans = {
+	1: {
+		trialSubscription: {
+			monthly: {
+				name: "Trial",
+				price: 1,
+				stripePriceId: "price_1T0LcRKoeqMlLw1bfOWgJr9K",
+				isOneTime: true,
+				influencers: 1,
+				images: 1,
+				videos: 1,
+				platforms: ["tiktok"],
+			},
+		},
+		growthSubscription: {
+			monthly: {
+				name: "Growth (monthly)",
+				price: 39,
+				originalPrice: 59,
+				stripePriceId: "price_1T0LpMKoeqMlLw1bqdJRoFRd",
+				validForDays: 30,
+				influencers: 5,
+				images: calcImages(SUBSCRIPTION_CREDITS.growth),
+				videos: calcVideos(SUBSCRIPTION_CREDITS.growth),
+				platforms: ["tiktok", "instagram", "youtube"],
+			},
+			annual: {
+				name: "Growth (annual)",
+				price: 32,
+				originalPrice: 49,
+				pricePerYear: 390,
+				stripePriceId: "price_1T0LpMKoeqMlLw1bUBRPjkLy",
+				validForDays: 365,
+				influencers: 5,
+				images: calcImages(SUBSCRIPTION_CREDITS.growth),
+				videos: calcVideos(SUBSCRIPTION_CREDITS.growth),
+				platforms: ["tiktok", "instagram", "youtube"],
+			},
+		},
+		proSubscription: {
+			monthly: {
+				name: "Pro (monthly)",
+				price: 69,
+				originalPrice: 129,
+				stripePriceId: "price_1T0LqAKoeqMlLw1b5BymHdqi",
+				validForDays: 30,
+				influencers: 15,
+				images: calcImages(SUBSCRIPTION_CREDITS.pro),
+				videos: calcVideos(SUBSCRIPTION_CREDITS.pro),
+				platforms: ["tiktok", "instagram", "youtube"],
+			},
+			annual: {
+				name: "Pro (annual)",
+				price: 57,
+				originalPrice: 107,
+				pricePerYear: 690,
+				stripePriceId: "price_1T0LqAKoeqMlLw1bXxnpe5p8",
+				validForDays: 365,
+				influencers: 15,
+				images: calcImages(SUBSCRIPTION_CREDITS.pro),
+				videos: calcVideos(SUBSCRIPTION_CREDITS.pro),
+				platforms: ["tiktok", "instagram", "youtube"],
+			},
+		},
+		ultraSubscription: {
+			monthly: {
+				name: "Ultra (monthly)",
+				price: 99,
+				originalPrice: 199,
+				stripePriceId: "price_1T0LqgKoeqMlLw1brnIN2l0D",
+				validForDays: 30,
+				influencers: 50,
+				images: calcImages(SUBSCRIPTION_CREDITS.ultra),
+				videos: calcVideos(SUBSCRIPTION_CREDITS.ultra),
+				platforms: ["tiktok", "instagram", "youtube"],
+			},
+			annual: {
+				name: "Ultra (annual)",
+				price: 82,
+				originalPrice: 166,
+				pricePerYear: 990,
+				stripePriceId: "price_1T0LqgKoeqMlLw1bcCY9CYG3",
+				validForDays: 365,
+				influencers: 50,
+				images: calcImages(SUBSCRIPTION_CREDITS.ultra),
+				videos: calcVideos(SUBSCRIPTION_CREDITS.ultra),
+				platforms: ["tiktok", "instagram", "youtube"],
+			},
+		},
+	},
+};
+
+// Determine if we're in sandbox/development mode based on NEXTAUTH_URL
+const isProduction = typeof process !== "undefined" && process.env?.NEXTAUTH_URL?.includes("viraloop.io");
+// Export the appropriate subscription plans based on environment
+export const subscriptionPlans = isProduction ? productionSubscriptionPlans : sandboxSubscriptionPlans;
+
 // Get current version's plans
-const v1Plans = subscriptionPlans[CURRENT_SUBSCRIPTION_VERSION];
+const PLANS = subscriptionPlans[CURRENT_SUBSCRIPTION_VERSION];
+
+// Export trial price ID for use in payment-success page
+export const TRIAL_PRICE_ID = PLANS?.trialSubscription?.monthly?.stripePriceId;
+
+// Stripe product for credit purchases (create in Stripe dashboard)
+export const CREDITS_STRIPE_PRODUCT_ID = "prod_CREDITS_VIRALOOP"; // TODO: Replace with actual Stripe product ID
+
+// Helper to calculate how many operations can be done with given credits
+export const calculateOperationsFromCredits = (credits) => ({
+	images: Math.floor(credits / CREDITS_REQUIRED.IMAGE_GENERATION),
+	videos: Math.floor(credits / CREDITS_REQUIRED.VIDEO_GENERATION_KLING),
+	influencers: Math.floor(credits / CREDITS_REQUIRED.INFLUENCER_CREATION),
+	tts: Math.floor(credits / CREDITS_REQUIRED.TTS_GENERATION),
+});
+
+// Helper to generate trial highlights dynamically based on credits
+const generateTrialHighlights = () => {
+	const credits = SUBSCRIPTION_CREDITS.trial;
+	return [
+		{ icon: "credits", text: `${credits} credits` },
+		{ icon: "influencer", text: `${PLANS.trialSubscription.monthly.influencers} AI Influencer` },
+		{ icon: "image", text: `${PLANS.trialSubscription.monthly.images} image` },
+		{ icon: "video", text: `${PLANS.trialSubscription.monthly.videos} video` },
+		{ icon: "platform", text: "1 platform", platforms: PLANS.trialSubscription.monthly.platforms },
+	];
+};
 
 // Pricing Features for detailed display
 export const PRICING_FEATURES = {
 	trial: {
-		highlights: [
-			{ icon: "influencer", text: "1 AI Influencer" },
-			{ icon: "image", text: "1 image" },
-			{ icon: "video", text: "1 video" },
-			{ icon: "platform", text: "1 social platform", platforms: ["tiktok"] },
-		],
+		highlights: generateTrialHighlights(),
 		features: [
+			{ icon: "platform", text: "1 social platform", platforms: ["tiktok"] },
 			{ icon: "video", text: "HD video quality" },
 			{ icon: "support", text: "Email support" },
 		],
@@ -147,9 +287,10 @@ export const PRICING_FEATURES = {
 	growth: {
 		inheritFrom: "Trial",
 		highlights: [
-			{ icon: "influencer", text: "5 AI Influencers" },
-			{ icon: "image", text: "40 images/month" },
-			{ icon: "video", text: "30 videos/month" },
+			{ icon: "credits", text: `${SUBSCRIPTION_CREDITS.growth} credits/month` },
+			{ icon: "influencer", text: `${PLANS.growthSubscription.monthly.influencers} AI Influencers` },
+			{ icon: "image", text: `${PLANS.growthSubscription.monthly.images} images/month` },
+			{ icon: "video", text: `${PLANS.growthSubscription.monthly.videos} videos/month` },
 			{ icon: "platform", text: "All platforms", platforms: ["tiktok", "instagram", "youtube"] },
 		],
 		features: [
@@ -161,9 +302,10 @@ export const PRICING_FEATURES = {
 	pro: {
 		inheritFrom: "Growth",
 		highlights: [
-			{ icon: "influencer", text: "15 AI Influencers" },
-			{ icon: "image", text: "70 images/month" },
-			{ icon: "video", text: "60 videos/month" },
+			{ icon: "credits", text: `${SUBSCRIPTION_CREDITS.pro} credits/month` },
+			{ icon: "influencer", text: `${PLANS.proSubscription.monthly.influencers} AI Influencers` },
+			{ icon: "image", text: `${PLANS.proSubscription.monthly.images} images/month` },
+			{ icon: "video", text: `${PLANS.proSubscription.monthly.videos} videos/month` },
 			{ icon: "platform", text: "All platforms", platforms: ["tiktok", "instagram", "youtube"] },
 		],
 		features: [
@@ -176,9 +318,10 @@ export const PRICING_FEATURES = {
 	ultra: {
 		inheritFrom: "Pro",
 		highlights: [
-			{ icon: "influencer", text: "50 AI Influencers" },
-			{ icon: "image", text: "100 images/month" },
-			{ icon: "video", text: "100 videos/month" },
+			{ icon: "credits", text: `${SUBSCRIPTION_CREDITS.ultra.toLocaleString()} credits/month` },
+			{ icon: "influencer", text: `${PLANS.ultraSubscription.monthly.influencers} AI Influencers` },
+			{ icon: "image", text: `${PLANS.ultraSubscription.monthly.images} images/month` },
+			{ icon: "video", text: `${PLANS.ultraSubscription.monthly.videos} videos/month` },
 			{ icon: "platform", text: "All platforms", platforms: ["tiktok", "instagram", "youtube"] },
 		],
 		features: [
@@ -195,7 +338,7 @@ export const PLAN_CONFIG = {
 	trial: {
 		name: "Trial",
 		description: "Try before you subscribe",
-		subscription: v1Plans?.trialSubscription,
+		subscription: PLANS?.trialSubscription,
 		features: PRICING_FEATURES.trial,
 		highlighted: false,
 		isTrial: true,
@@ -203,14 +346,14 @@ export const PLAN_CONFIG = {
 	growth: {
 		name: "Growth",
 		description: "Perfect for getting started",
-		subscription: v1Plans?.growthSubscription,
+		subscription: PLANS?.growthSubscription,
 		features: PRICING_FEATURES.growth,
 		highlighted: false,
 	},
 	pro: {
 		name: "Pro",
 		description: "Most popular for serious creators",
-		subscription: v1Plans?.proSubscription,
+		subscription: PLANS?.proSubscription,
 		features: PRICING_FEATURES.pro,
 		highlighted: true,
 		badge: "MOST POPULAR",
@@ -218,7 +361,7 @@ export const PLAN_CONFIG = {
 	ultra: {
 		name: "Ultra",
 		description: "For agencies and power users",
-		subscription: v1Plans?.ultraSubscription,
+		subscription: PLANS?.ultraSubscription,
 		features: PRICING_FEATURES.ultra,
 		highlighted: false,
 	},
@@ -344,31 +487,3 @@ export const DAYS_OF_WEEK = [
 	{ value: 5, label: "Friday" },
 	{ value: 6, label: "Saturday" },
 ];
-
-// =====================
-// CREDIT SYSTEM
-// =====================
-
-// Credit pricing
-export const PRICE_PER_CREDIT = 0.1; // $0.10 per credit
-
-// Stripe product for credit purchases (create in Stripe dashboard)
-export const CREDITS_STRIPE_PRODUCT_ID = "prod_CREDITS_VIRALOOP"; // TODO: Replace with actual Stripe product ID
-
-// Credit costs for operations
-export const CREDITS_REQUIRED = {
-	IMAGE_GENERATION: 2,
-	VIDEO_GENERATION_KLING: 10,
-	VIDEO_GENERATION_VEO_FAST: 8,
-	VIDEO_GENERATION_VEO_QUALITY: 15,
-	TTS_GENERATION: 1,
-	INFLUENCER_CREATION: 5,
-};
-
-// Credits per subscription tier (monthly)
-export const SUBSCRIPTION_CREDITS = {
-	trial: 20, // One-time
-	growth: 200, // Monthly
-	pro: 400, // Monthly
-	ultra: 800, // Monthly
-};

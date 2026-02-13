@@ -56,7 +56,7 @@ handler.use(isAuthenticatedUser).post(async (req, res) => {
 		if (!creditCheck.allowed) {
 			console.log("ERROR: Insufficient credits");
 			const creditMessage = creditCheck.credits === 0
-				? "You have no credits. Please purchase credits to generate images."
+				? "Please purchase credits to create your influencer."
 				: `Insufficient credits. You need ${creditCheck.required} credits but have ${creditCheck.credits}.`;
 			throw new ErrorHandler(creditMessage, 402, "insufficient_credits");
 		}

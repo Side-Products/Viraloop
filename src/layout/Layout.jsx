@@ -16,7 +16,8 @@ const Layout = ({ children }) => {
 			router.pathname.startsWith("/schedule") ||
 			router.pathname.startsWith("/accounts") ||
 			router.pathname.startsWith("/analytics") ||
-			router.pathname.startsWith("/settings")
+			router.pathname.startsWith("/settings") ||
+			router.pathname.startsWith("/spin-and-win")
 		);
 	}, [router.pathname]);
 

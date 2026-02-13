@@ -27,7 +27,7 @@ export async function getServerSideProps({ req }) {
 export default function BillingSettings() {
 	const router = useRouter();
 	const { data: session } = useSession();
-	const { currentTeam } = useContext(TeamContext);
+	const { currentTeam, planInfo } = useContext(TeamContext);
 	const [isLoadingPortal, setIsLoadingPortal] = useState(false);
 	const [showSuccessMessage, setShowSuccessMessage] = useState(false);
 	const [showErrorMessage, setShowErrorMessage] = useState(false);
@@ -63,19 +63,6 @@ export default function BillingSettings() {
 		} finally {
 			setIsLoadingPortal(false);
 		}
-	};
-
-	// Get current plan name based on team's subscription
-	const getCurrentPlanName = () => {
-		if (!currentTeam) return "Free";
-
-		// Check based on influencer limit
-		if (currentTeam.influencerLimit === 1) return "Trial";
-		if (currentTeam.influencerLimit === 5) return "Growth";
-		if (currentTeam.influencerLimit === 15) return "Pro";
-		if (currentTeam.influencerLimit === 50) return "Ultra";
-
-		return "Free";
 	};
 
 	return (
@@ -135,7 +122,7 @@ export default function BillingSettings() {
 					<div className="hidden md:block w-px h-6 bg-light-300" />
 					<div>
 						<span className="text-sm text-neutral-500">Plan:</span>
-						<span className="ml-2 text-sm font-medium text-primary-500">{getCurrentPlanName()}</span>
+						<span className="ml-2 text-sm font-medium text-primary-500">{planInfo?.tier || "Trial"}</span>
 					</div>
 					<div className="hidden md:block w-px h-6 bg-light-300" />
 					<div>
@@ -158,65 +145,26 @@ export default function BillingSettings() {
 			{/* Pricing Plans */}
 			<Pricing isBillingPage={true} hideEnterprise={true} />
 
-			{/* Usage Card */}
+			{/* Influencer Usage Card */}
 			{currentTeam && currentTeam.influencerLimit > 0 && (
 				<div className="bg-white rounded-2xl border border-light-300 shadow-sm p-6 mt-8 mb-6">
-					<h2 className="text-lg font-semibold text-neutral-900 mb-1">Usage This Month</h2>
-					<p className="text-neutral-500 text-sm mb-6">Your current resource usage</p>
+					<h2 className="text-lg font-semibold text-neutral-900 mb-1">Usage</h2>
+					<p className="text-neutral-500 text-sm mb-6">Your current influencer usage</p>
 
-					<div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-						{/* Images Usage */}
-						<div className="bg-light-50 rounded-xl p-4">
-							<div className="flex items-center justify-between mb-3">
-								<span className="text-sm font-medium text-neutral-700">Images</span>
-								<span className="text-sm text-neutral-500">
-									{currentTeam.imagesUsedThisMonth || 0} / {currentTeam.imageLimit || 0}
-								</span>
-							</div>
-							<div className="h-2 bg-light-200 rounded-full overflow-hidden">
-								<div
-									className="h-full bg-gradient-to-r from-primary-400 to-primary-500 rounded-full transition-all"
-									style={{
-										width: `${Math.min(((currentTeam.imagesUsedThisMonth || 0) / (currentTeam.imageLimit || 1)) * 100, 100)}%`,
-									}}
-								/>
-							</div>
+					<div className="bg-light-50 rounded-xl p-4 max-w-md">
+						<div className="flex items-center justify-between mb-3">
+							<span className="text-sm font-medium text-neutral-700">Influencers</span>
+							<span className="text-sm text-neutral-500">
+								{currentTeam.influencersCount || 0} / {currentTeam.influencerLimit || 0}
+							</span>
 						</div>
-
-						{/* Videos Usage */}
-						<div className="bg-light-50 rounded-xl p-4">
-							<div className="flex items-center justify-between mb-3">
-								<span className="text-sm font-medium text-neutral-700">Videos</span>
-								<span className="text-sm text-neutral-500">
-									{currentTeam.videosUsedThisMonth || 0} / {currentTeam.videoLimit || 0}
-								</span>
-							</div>
-							<div className="h-2 bg-light-200 rounded-full overflow-hidden">
-								<div
-									className="h-full bg-gradient-to-r from-info-400 to-info-500 rounded-full transition-all"
-									style={{
-										width: `${Math.min(((currentTeam.videosUsedThisMonth || 0) / (currentTeam.videoLimit || 1)) * 100, 100)}%`,
-									}}
-								/>
-							</div>
-						</div>
-
-						{/* Influencers Usage */}
-						<div className="bg-light-50 rounded-xl p-4">
-							<div className="flex items-center justify-between mb-3">
-								<span className="text-sm font-medium text-neutral-700">Influencers</span>
-								<span className="text-sm text-neutral-500">
-									{currentTeam.influencerCount || 0} / {currentTeam.influencerLimit || 0}
-								</span>
-							</div>
-							<div className="h-2 bg-light-200 rounded-full overflow-hidden">
-								<div
-									className="h-full bg-gradient-to-r from-warning-400 to-warning-500 rounded-full transition-all"
-									style={{
-										width: `${Math.min(((currentTeam.influencerCount || 0) / (currentTeam.influencerLimit || 1)) * 100, 100)}%`,
-									}}
-								/>
-							</div>
+						<div className="h-2 bg-light-200 rounded-full overflow-hidden">
+							<div
+								className="h-full bg-gradient-to-r from-primary-400 to-primary-500 rounded-full transition-all"
+								style={{
+									width: `${Math.min(((currentTeam.influencersCount || 0) / (currentTeam.influencerLimit || 1)) * 100, 100)}%`,
+								}}
+							/>
 						</div>
 					</div>
 				</div>

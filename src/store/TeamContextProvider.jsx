@@ -1,5 +1,6 @@
 import { useState, useEffect, createContext, useCallback, useMemo } from "react";
 import { useSession } from "next-auth/react";
+import { getTeamPlanInfo } from "@/utils/Helpers";
 
 const DEFAULT_TEAM = {
 	_id: "",
@@ -92,6 +93,9 @@ function TeamContextProvider({ children }) {
 		}
 	}, []);
 
+	// Computed plan info from current team
+	const planInfo = useMemo(() => getTeamPlanInfo(currentTeam), [currentTeam]);
+
 	const contextValue = useMemo(
 		() => ({
 			teams,
@@ -101,8 +105,9 @@ function TeamContextProvider({ children }) {
 			onCurrentTeamChange,
 			refreshTeams,
 			loading,
+			planInfo,
 		}),
-		[teams, currentTeam, onCurrentTeamChange, refreshTeams, loading]
+		[teams, currentTeam, onCurrentTeamChange, refreshTeams, loading, planInfo]
 	);
 
 	return <TeamContext.Provider value={contextValue}>{children}</TeamContext.Provider>;

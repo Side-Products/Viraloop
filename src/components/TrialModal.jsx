@@ -5,8 +5,9 @@ import { loadStripe } from "@stripe/stripe-js";
 import { Elements, PaymentElement, useStripe, useElements } from "@stripe/react-stripe-js";
 import { useTrialModal } from "@/store/TrialModalContextProvider";
 import { TeamContext } from "@/store/TeamContextProvider";
-import { subscriptionPlans, CURRENT_SUBSCRIPTION_VERSION } from "@/config/constants";
+import { subscriptionPlans, CURRENT_SUBSCRIPTION_VERSION, SUBSCRIPTION_CREDITS } from "@/config/constants";
 import { X, Check } from "lucide-react";
+import { FaTiktok } from "react-icons/fa";
 import { toast } from "sonner";
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_API_KEY);
@@ -245,10 +246,11 @@ const TrialModal = () => {
 	}, [isTrialModalOpen]);
 
 	const features = [
-		{ icon: "🤖", text: "1 AI Influencer" },
-		{ icon: "🎨", text: "1 Image Generation" },
-		{ icon: "🎬", text: "1 Video Creation" },
-		{ icon: "📱", text: "1 Social Platform" },
+		{ icon: "💰", text: `${SUBSCRIPTION_CREDITS.trial} credits` },
+		{ icon: "🤖", text: `${trialPlan?.influencers} AI Influencer` },
+		{ icon: "🎨", text: `${trialPlan?.images} image` },
+		{ icon: "🎬", text: `${trialPlan?.videos} video` },
+		{ icon: <FaTiktok className="w-5 h-5" style={{ color: "#00f2ea" }} />, text: "1 platform" },
 	];
 
 	return (

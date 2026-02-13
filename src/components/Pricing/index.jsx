@@ -10,7 +10,7 @@ import { CalendarDaysIcon } from "@/components/ui/calendar-days";
 import { RefreshCWIcon } from "@/components/ui/refresh-cw";
 import { ChartBarIncreasingIcon } from "@/components/ui/chart-bar-increasing";
 import { CursorClickIcon } from "@/components/ui/cursor-click";
-import { Video, Code, Building, Info, Image, Headphones, Check } from "lucide-react";
+import { Video, Code, Building, Info, Image, Headphones, Check, Coins } from "lucide-react";
 
 const Pricing = ({ isBillingPage = false, hideEnterprise = false }) => {
 	const [billingPeriod, setBillingPeriod] = useState("monthly");
@@ -88,6 +88,8 @@ const Pricing = ({ isBillingPage = false, hideEnterprise = false }) => {
 		const iconClass = "w-4 h-4 text-neutral-500 flex-shrink-0";
 
 		switch (iconName) {
+			case "credits":
+				return <Coins className={iconClass} />;
 			case "influencer":
 				return <UsersIcon size={16} className="text-neutral-500 flex-shrink-0" />;
 			case "image":
@@ -180,7 +182,7 @@ const Pricing = ({ isBillingPage = false, hideEnterprise = false }) => {
 
 						{/* CTA Button */}
 						{isPlanCurrent ? (
-							<div className="mt-6 w-full py-3 px-4 flex items-center justify-center gap-2 bg-success-100 text-success-700 border border-success-200 rounded-xl font-medium">
+							<div className="mt-6 w-full py-3.5 px-4 flex items-center justify-center gap-2 bg-neutral-200/50 text-neutral-400 rounded-sm">
 								<Check className="w-4 h-4" />
 								<span className="text-sm font-medium">Current Plan</span>
 							</div>

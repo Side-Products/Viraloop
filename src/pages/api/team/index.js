@@ -5,6 +5,7 @@ import { isAuthenticatedUser } from "@/backend/middlewares/auth";
 import Team from "@/backend/models/team";
 import Member from "@/backend/models/member";
 import Influencer from "@/backend/models/influencer";
+import Subscription from "@/backend/models/subscription";
 import onError from "@/backend/middlewares/errors";
 
 const handler = nc({ onError });
@@ -61,6 +62,28 @@ handler.use(isAuthenticatedUser).get(async (req, res) => {
 	]);
 	const countMap = Object.fromEntries(influencerCounts.map((c) => [c._id.toString(), c.count]));
 
+	// Get active subscriptions for each team
+	const subscriptions = await Subscription.find({
+		team: { $in: teamIds },
+		subscriptionValidUntil: { $gte: new Date() },
+	}).sort({ createdAt: -1 });
+	const subscriptionMap = {};
+	subscriptions.forEach((sub) => {
+		const teamIdStr = sub.team.toString();
+		// Only keep the most recent subscription per team
+		if (!subscriptionMap[teamIdStr]) {
+			subscriptionMap[teamIdStr] = {
+				plan: sub.plan,
+				status: sub.stripe_subscription_status,
+				validUntil: sub.subscriptionValidUntil,
+				stripe_priceId: sub.stripe_priceId,
+				stripe_subscription_status: sub.stripe_subscription_status,
+				subscriptionValidUntil: sub.subscriptionValidUntil,
+				version: sub.version || 1,
+			};
+		}
+	});
+
 	// Extract teams from member records
 	const teams = members
 		.filter((member) => member.teamId) // Filter out any null teamIds
@@ -72,11 +95,9 @@ handler.use(isAuthenticatedUser).get(async (req, res) => {
 			role: member.role,
 			// Usage limits
 			influencerLimit: member.teamId.influencerLimit || 0,
-			imageLimit: member.teamId.imageLimit || 0,
-			videoLimit: member.teamId.videoLimit || 0,
-			imagesUsedThisMonth: member.teamId.imagesUsedThisMonth || 0,
-			videosUsedThisMonth: member.teamId.videosUsedThisMonth || 0,
 			influencersCount: countMap[member.teamId._id.toString()] || 0,
+			// Subscription info
+			subscription: subscriptionMap[member.teamId._id.toString()] || null,
 		}));
 
 	res.status(200).json({

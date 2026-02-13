@@ -96,6 +96,111 @@ export const addCreditsToTeam = async ({
 };
 
 /**
+ * Handle PaymentIntent succeeded (for trial payments using PaymentIntent flow)
+ */
+const stripeWebhookPaymentIntentSucceeded = catchAsyncErrors(async (req, res, eventData) => {
+	const paymentIntent = eventData.object;
+	const metadata = paymentIntent.metadata || {};
+
+	console.log("\n========== PAYMENT INTENT SUCCEEDED ==========");
+	console.log("PaymentIntent ID:", paymentIntent.id);
+	console.log("Amount:", paymentIntent.amount);
+	console.log("Metadata:", JSON.stringify(metadata, null, 2));
+
+	// Only process one-time payments (trials)
+	if (metadata.isOneTime !== "true") {
+		console.log("Not a one-time payment, skipping");
+		return res.status(200).json({ success: true, message: "Not a one-time payment" });
+	}
+
+	const stripePriceId = metadata.stripePriceId;
+	const teamId = metadata.team;
+	const userId = metadata.client_reference_id;
+
+	if (!teamId || !stripePriceId) {
+		console.log("Missing team ID or price ID in metadata");
+		return res.status(200).json({ success: false, message: "Missing metadata" });
+	}
+
+	try {
+		// Add credits for trial
+		const planName = getPlanFromStripePriceId(stripePriceId);
+		const creditsForPlan = getCreditsForPlan(planName);
+
+		if (creditsForPlan > 0) {
+			const creditIdempotencyKey = `payment_intent_${paymentIntent.id}`;
+			await addCreditsToTeam({
+				teamId,
+				userId,
+				amount_total: paymentIntent.amount,
+				creditsToAdd: creditsForPlan,
+				type: "trial",
+				idempotencyKey: creditIdempotencyKey,
+			});
+			console.log(`[CREDITS] Added ${creditsForPlan} credits for trial via PaymentIntent`);
+		}
+
+		// Create Subscription entry for trial (valid for 1 year from purchase)
+		const existingTrialSub = await Subscription.findOne({
+			team: mongoose.Types.ObjectId(teamId),
+			type: "trial",
+		});
+
+		if (!existingTrialSub) {
+			const trialValidUntil = new Date();
+			trialValidUntil.setFullYear(trialValidUntil.getFullYear() + 1); // Trial valid for 1 year
+
+			await Subscription.create({
+				user: mongoose.Types.ObjectId(userId),
+				team: mongoose.Types.ObjectId(teamId),
+				type: "trial", // Mark as trial to distinguish from recurring subscriptions
+				version: getLatestSubscriptionPlansVersion(),
+				plan: planName,
+				stripe_subscription: `trial_pi_${paymentIntent.id}`,
+				stripe_subscription_status: "active",
+				stripe_priceId: stripePriceId,
+				stripe_customer: paymentIntent.customer || "",
+				stripe_invoice: "",
+				stripe_hosted_invoice_url: "",
+				amount_total: paymentIntent.amount,
+				currency: paymentIntent.currency || "usd",
+				paymentInfo: {
+					id: paymentIntent.id,
+					status: paymentIntent.status,
+				},
+				subscriptionValidUntil: trialValidUntil,
+			});
+			console.log(`[SUBSCRIPTION] Created trial subscription for team ${teamId} via PaymentIntent`);
+		}
+
+		// Update team limits based on plan
+		const planLimits = getPlanLimitsFromStripePriceId(stripePriceId);
+		const team = await Team.findById(teamId);
+		if (team && planLimits) {
+			team.influencerLimit = planLimits.influencers || 0;
+			await team.save();
+			console.log(`[TEAM] Updated influencer limit for team ${teamId}:`, planLimits.influencers);
+		}
+
+		console.log(`✅ Trial payment processed successfully for team ${teamId}`);
+		console.log("========== END PAYMENT INTENT ==========\n");
+
+		return res.status(200).json({
+			success: true,
+			message: "Trial payment processed successfully",
+			creditsAdded: creditsForPlan,
+		});
+	} catch (error) {
+		console.error("[STRIPE ERROR] PaymentIntent processing:", error);
+		return res.status(200).json({
+			success: false,
+			message: "Error processing payment intent",
+			error: error.message,
+		});
+	}
+});
+
+/**
  * Handle credit purchase checkout completion
  */
 const stripeWebhookCreditsCheckoutSessionCompleted = catchAsyncErrors(async (req, res, eventData) => {
@@ -188,68 +293,29 @@ const stripeWebhook = catchAsyncErrors(async (req, res) => {
 	switch (eventType) {
 		case "checkout.session.completed":
 			// Payment is successful and the subscription is created.
-			await stripeWebhookCheckoutSessionCompleted(req, res, eventData);
-			break;
+			return await stripeWebhookCheckoutSessionCompleted(req, res, eventData);
+		case "payment_intent.succeeded":
+			// Handle PaymentIntent success (used for trial payments)
+			return await stripeWebhookPaymentIntentSucceeded(req, res, eventData);
 		case "invoice.paid":
 			// Continue to provision the subscription as payments continue to be made.
-			await stripeInvoicePaid(req, res, eventData);
-			break;
+			return await stripeInvoicePaid(req, res, eventData);
 		case "invoice.payment_failed":
 			// The payment failed or the customer does not have a valid payment method.
-			await stripeInvoiceFailed(req, res, eventData);
-			break;
+			return await stripeInvoiceFailed(req, res, eventData);
 		case "customer.subscription.created":
-			await stripeCustomerSubscriptionCreated(req, res, eventData);
-			break;
+			return await stripeCustomerSubscriptionCreated(req, res, eventData);
 		case "customer.subscription.updated":
 			// Handle subscription updated from portal
-			await stripeCustomerSubscriptionUpdated(req, res, eventData);
-			break;
+			return await stripeCustomerSubscriptionUpdated(req, res, eventData);
 		default:
-			break;
+			// Return 200 for unhandled events to prevent Stripe retries
+			return res.status(200).json({
+				success: true,
+				message: `Unhandled event type: ${eventType}`,
+			});
 	}
 });
-
-/**
- * Update team limits based on subscription plan
- */
-const updateTeamLimits = async (teamId, stripePriceId) => {
-	console.log("\n--- Updating Team Limits ---");
-	console.log("Team ID:", teamId);
-	console.log("Stripe Price ID:", stripePriceId);
-
-	const limits = getPlanLimitsFromStripePriceId(stripePriceId);
-	console.log("Resolved limits:", JSON.stringify(limits, null, 2));
-
-	if (limits.influencers === 0 && limits.imagesPerMonth === 0 && limits.videosPerMonth === 0) {
-		console.log("⚠️ Warning: All limits are 0 - price ID may not match any plan!");
-	}
-
-	const updatedTeam = await Team.findByIdAndUpdate(
-		teamId,
-		{
-			influencerLimit: limits.influencers,
-			imageLimit: limits.imagesPerMonth,
-			videoLimit: limits.videosPerMonth,
-			// Reset usage counts for new subscription
-			imagesUsedThisMonth: 0,
-			videosUsedThisMonth: 0,
-			usagePeriodStart: new Date(),
-		},
-		{ new: true }
-	);
-
-	if (updatedTeam) {
-		console.log(`✅ Updated team ${teamId} limits:`);
-		console.log(`   - Influencers: ${updatedTeam.influencerLimit}`);
-		console.log(`   - Images/month: ${updatedTeam.imageLimit}`);
-		console.log(`   - Videos/month: ${updatedTeam.videoLimit}`);
-	} else {
-		console.log(`❌ Team ${teamId} not found!`);
-	}
-
-	return updatedTeam;
-};
 
 const stripeWebhookCheckoutSessionCompleted = catchAsyncErrors(async (req, res, eventData) => {
 	try {
@@ -284,8 +350,6 @@ const stripeWebhookCheckoutSessionCompleted = catchAsyncErrors(async (req, res, 
 			console.log("Price ID from metadata:", stripePriceId);
 
 			if (teamId && stripePriceId) {
-				await updateTeamLimits(teamId, stripePriceId);
-
 				// Add credits for trial
 				const planName = getPlanFromStripePriceId(stripePriceId);
 				const creditsForPlan = getCreditsForPlan(planName);
@@ -296,11 +360,53 @@ const stripeWebhookCheckoutSessionCompleted = catchAsyncErrors(async (req, res, 
 						userId: session.client_reference_id,
 						amount_total: session.amount_total,
 						creditsToAdd: creditsForPlan,
-						type: "topup",
+						type: "trial",
 						idempotencyKey: creditIdempotencyKey,
 						stripeSessionId: session.id,
 					});
 					console.log(`[CREDITS] Added ${creditsForPlan} credits for trial purchase`);
+				}
+
+				// Create Subscription entry for trial (valid for 1 year from purchase)
+				const existingTrialSub = await Subscription.findOne({
+					team: mongoose.Types.ObjectId(teamId),
+					type: "trial",
+				});
+
+				if (!existingTrialSub) {
+					const trialValidUntil = new Date();
+					trialValidUntil.setFullYear(trialValidUntil.getFullYear() + 1); // Trial valid for 1 year
+
+					await Subscription.create({
+						user: mongoose.Types.ObjectId(session.client_reference_id),
+						team: mongoose.Types.ObjectId(teamId),
+						type: "trial", // Mark as trial to distinguish from recurring subscriptions
+						version: getLatestSubscriptionPlansVersion(),
+						plan: planName,
+						stripe_subscription: `trial_${session.id}`,
+						stripe_subscription_status: "active",
+						stripe_priceId: stripePriceId,
+						stripe_customer: session.customer || "",
+						stripe_invoice: "",
+						stripe_hosted_invoice_url: "",
+						amount_total: session.amount_total,
+						currency: session.currency || "usd",
+						paymentInfo: {
+							id: session.payment_intent || "",
+							status: session.payment_status || "paid",
+						},
+						subscriptionValidUntil: trialValidUntil,
+					});
+					console.log(`[SUBSCRIPTION] Created trial subscription for team ${teamId}`);
+				}
+
+				// Update team limits based on plan
+				const planLimits = getPlanLimitsFromStripePriceId(stripePriceId);
+				const team = await Team.findById(teamId);
+				if (team && planLimits) {
+					team.influencerLimit = planLimits.influencers || 0;
+					await team.save();
+					console.log(`[TEAM] Updated influencer limit for team ${teamId}:`, planLimits.influencers);
 				}
 
 				console.log(`✅ One-time payment processed successfully for team ${teamId}`);
@@ -359,12 +465,9 @@ const stripeWebhookCheckoutSessionCompleted = catchAsyncErrors(async (req, res, 
 		});
 		await subscription.save();
 
-		// Update team limits based on the plan
-		const validStatusesForLimits = ["active", "trialing"];
-		if (validStatusesForLimits.includes(stripeSubscription.status)) {
-			await updateTeamLimits(session.metadata?.team, stripeSubscription.plan.id);
-
-			// Add credits for the subscription
+		// Add credits for the subscription
+		const validStatusesForCredits = ["active", "trialing"];
+		if (validStatusesForCredits.includes(stripeSubscription.status)) {
 			const planName = getPlanFromStripePriceId(stripeSubscription.plan.id);
 			const creditsForPlan = getCreditsForPlan(planName);
 			if (creditsForPlan > 0) {
@@ -445,12 +548,6 @@ const stripeCustomerSubscriptionCreated = catchAsyncErrors(async (req, res, even
 		});
 		await subscription.save();
 
-		// Update team limits based on the plan
-		const validStatusesForLimits = ["active", "trialing"];
-		if (validStatusesForLimits.includes(stripeSubscription.status)) {
-			await updateTeamLimits(session.metadata?.team, stripeSubscription.plan.id);
-		}
-
 		return res.status(200).json({
 			success: true,
 			subscription,
@@ -489,16 +586,8 @@ const stripeCustomerSubscriptionUpdated = catchAsyncErrors(async (req, res, even
 		const validStatuses = ["active", "trialing"];
 		if (validStatuses.includes(session.status)) {
 			old_subscription.subscriptionValidUntil = parseInt(session.current_period_end) * 1000;
-			// Update team limits when subscription is active
-			await updateTeamLimits(old_subscription.team, session.plan.id);
 		} else {
 			old_subscription.subscriptionValidUntil = Date.now();
-			// Reset team limits to 0 when subscription is no longer active
-			await Team.findByIdAndUpdate(old_subscription.team, {
-				influencerLimit: 0,
-				imageLimit: 0,
-				videoLimit: 0,
-			});
 		}
 
 		old_subscription.updatedAt = Date.now();
@@ -545,8 +634,6 @@ const stripeInvoicePaid = catchAsyncErrors(async (req, res, eventData) => {
 		const validStatuses = ["active", "trialing"];
 		if (validStatuses.includes(stripeSubscription.status)) {
 			old_subscription.subscriptionValidUntil = parseInt(stripeSubscription.current_period_end) * 1000;
-			// Update team limits when subscription is renewed
-			await updateTeamLimits(old_subscription.team, stripeSubscription.plan.id);
 
 			// Add credits for subscription renewal
 			const planName = getPlanFromStripePriceId(stripeSubscription.plan.id);
@@ -566,12 +653,6 @@ const stripeInvoicePaid = catchAsyncErrors(async (req, res, eventData) => {
 			}
 		} else {
 			old_subscription.subscriptionValidUntil = Date.now();
-			// Reset team limits to 0 when subscription is no longer active
-			await Team.findByIdAndUpdate(old_subscription.team, {
-				influencerLimit: 0,
-				imageLimit: 0,
-				videoLimit: 0,
-			});
 		}
 
 		old_subscription.updatedAt = Date.now();
@@ -622,13 +703,6 @@ const stripeInvoiceFailed = catchAsyncErrors(async (req, res, eventData) => {
 		};
 		old_subscription.updatedAt = Date.now();
 		await old_subscription.save();
-
-		// Reset team limits to 0 on payment failure
-		await Team.findByIdAndUpdate(old_subscription.team, {
-			influencerLimit: 0,
-			imageLimit: 0,
-			videoLimit: 0,
-		});
 
 		// TODO: Send email to customer about payment failure
 

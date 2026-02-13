@@ -3,7 +3,7 @@ import { useRouter } from "next/router";
 import Head from "next/head";
 import Link from "next/link";
 import Confetti from "react-confetti";
-import { PRODUCT_NAME } from "@/config/constants";
+import { PRODUCT_NAME, TRIAL_PRICE_ID } from "@/config/constants";
 import { useSession } from "next-auth/react";
 import { getSession } from "next-auth/react";
 
@@ -22,8 +22,6 @@ export async function getServerSideProps({ req }) {
 		props: { session },
 	};
 }
-
-const TRIAL_PRICE_ID = "price_1SyuIo480cIYlJtw77WJVmRe";
 
 // Sparkle component for celebratory effect
 const Sparkle = ({ style, delay }) => (
@@ -192,14 +190,14 @@ const PaymentSuccess = () => {
 
 					{/* CTA Buttons */}
 					<div className="flex flex-col sm:flex-row gap-4 justify-center">
+						<Link href="/dashboard" className="btn btn-secondary !text-base !px-6 !py-3.5">
+							Go to Dashboard
+						</Link>
 						<Link href="/influencers" className="btn btn-primary !text-base !px-6 !py-3.5">
 							Create Your First Influencer
 							<svg className="w-5 h-5 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
 								<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
 							</svg>
-						</Link>
-						<Link href="/dashboard" className="btn btn-secondary !text-base !px-6 !py-3.5">
-							Go to Dashboard
 						</Link>
 					</div>
 

@@ -24,7 +24,7 @@ const creditHistorySchema = new mongoose.Schema(
 		},
 		type: {
 			type: String,
-			enum: ["recurring", "topup", "spending"],
+			enum: ["recurring", "topup", "spending", "trial", "spin"],
 			default: "recurring",
 		},
 		// Viraloop-specific tracking

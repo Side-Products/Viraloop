@@ -335,7 +335,7 @@ export default function CreateInfluencer({ isOpen, onClose, onSuccess, inline = 
 											value={formData.imagePrompt}
 											onChange={(e) => setFormData((prev) => ({ ...prev, imagePrompt: e.target.value }))}
 											placeholder={`Describe your influencer's appearance (e.g., Young adult, fitness coach, wearing a blue t-shirt, friendly smile).\nAlso, describe the surrounding environment and the background of the image.`}
-											className="input resize-none text-sm"
+											className="input resize-none text-[13px] font-secondary placeholder:text-[13px]"
 											rows={6}
 										/>
 									</div>

@@ -33,10 +33,12 @@ export async function scheduleCredits() {
 		// - Subscription is still valid (not expired)
 		// - Created more than a month ago (already received initial credits)
 		// - Status is active
+		// - Not a trial (trials are one-time payments, no recurring credits)
 		const subscriptions = await Subscription.find({
 			subscriptionValidUntil: { $gt: new Date() },
 			createdAt: { $lt: oneMonthAgo },
 			stripe_subscription_status: "active",
+			type: { $ne: "trial" },
 		}).populate("user team");
 
 		console.log(`Found ${subscriptions.length} eligible subscriptions`);
