@@ -4,6 +4,7 @@ import { useRouter } from "next/router";
 import { signOut } from "next-auth/react";
 import { TeamContext } from "@/store/TeamContextProvider";
 import TeamSelector from "@/components/TeamSelector";
+import LimitsBar from "@/components/LimitsBar";
 import { HomeIcon } from "@/components/ui/home";
 import { SmilePlusIcon } from "@/components/ui/smile-plus";
 import { PlusIcon } from "@/components/ui/plus";
@@ -35,7 +36,7 @@ export default function DashboardLayout({ children }) {
 	const isActive = (href) => router.pathname === href;
 
 	const handleTeamChange = (selectedTeam) => {
-		if (selectedTeam) {
+		if (selectedTeam && selectedTeam._id !== currentTeam?._id) {
 			onCurrentTeamChange(selectedTeam);
 			router.reload();
 		}
@@ -157,7 +158,7 @@ export default function DashboardLayout({ children }) {
 					{/* Bottom navigation */}
 					<div className="px-3 py-4 border-t border-light-200 space-y-1 overflow-visible">
 						{/* Team Dropdown */}
-						<div className="pb-3 mb-2 border-b border-light-200 overflow-visible">
+						<div className="overflow-visible">
 							<TeamSelector
 								id="sidebar-team-selector"
 								teams={teams}
@@ -165,6 +166,11 @@ export default function DashboardLayout({ children }) {
 								onTeamChange={handleTeamChange}
 								isLoading={teamsLoading}
 							/>
+						</div>
+
+						{/* Limits Bar */}
+						<div className="pb-3 mb-2 border-b border-light-200">
+							<LimitsBar />
 						</div>
 
 						<Link

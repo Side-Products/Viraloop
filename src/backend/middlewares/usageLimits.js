@@ -1,186 +1,143 @@
 import Team from "../models/team";
+import { CREDITS_REQUIRED } from "@/config/constants";
 
 /**
- * Check if we need to reset the monthly usage counters
- * Resets if the current month is different from the usagePeriodStart month
- */
-const shouldResetUsage = (usagePeriodStart) => {
-	if (!usagePeriodStart) return true;
-
-	const now = new Date();
-	const periodStart = new Date(usagePeriodStart);
-
-	// Reset if we're in a different month or year
-	return now.getMonth() !== periodStart.getMonth() || now.getFullYear() !== periodStart.getFullYear();
-};
-
-/**
- * Reset monthly usage counters for a team
- */
-const resetMonthlyUsage = async (teamId) => {
-	await Team.findByIdAndUpdate(teamId, {
-		imagesUsedThisMonth: 0,
-		videosUsedThisMonth: 0,
-		usagePeriodStart: new Date(),
-	});
-};
-
-/**
- * Check if team can generate an image and increment usage if allowed
+ * Check if team has sufficient credits for image generation
  * @param {string} teamId - The team ID
- * @returns {Object} { allowed: boolean, message?: string, remaining?: number }
+ * @returns {Object} { allowed: boolean, message?: string, credits, required }
  */
-export const checkAndIncrementImageUsage = async (teamId) => {
+export const checkImageCredits = async (teamId) => {
 	const team = await Team.findById(teamId);
 	if (!team) {
 		return { allowed: false, message: "Team not found" };
 	}
 
-	// Check if we need to reset monthly usage
-	if (shouldResetUsage(team.usagePeriodStart)) {
-		await resetMonthlyUsage(teamId);
-		// Reload team with reset values
-		const updatedTeam = await Team.findById(teamId);
-		team.imagesUsedThisMonth = updatedTeam.imagesUsedThisMonth;
-		team.usagePeriodStart = updatedTeam.usagePeriodStart;
-	}
-
-	const imageLimit = team.imageLimit || 0;
-	const imagesUsed = team.imagesUsedThisMonth || 0;
-
-	// Check if team has no image access (no subscription)
-	if (imageLimit === 0) {
+	const required = CREDITS_REQUIRED.IMAGE_GENERATION;
+	if (team.credits < required) {
 		return {
 			allowed: false,
-			message: "No active subscription. Please upgrade to generate images.",
-			limit: 0,
-			used: imagesUsed,
-			remaining: 0,
+			message: `Insufficient credits. Image generation requires ${required} credits. You have ${team.credits}.`,
+			credits: team.credits,
+			required,
 		};
 	}
-
-	// Check if limit is reached
-	if (imagesUsed >= imageLimit) {
-		return {
-			allowed: false,
-			message: `Monthly image limit reached (${imageLimit} images). Please upgrade your plan for more.`,
-			limit: imageLimit,
-			used: imagesUsed,
-			remaining: 0,
-		};
-	}
-
-	// Increment usage
-	await Team.findByIdAndUpdate(teamId, {
-		$inc: { imagesUsedThisMonth: 1 },
-	});
 
 	return {
 		allowed: true,
-		limit: imageLimit,
-		used: imagesUsed + 1,
-		remaining: imageLimit - imagesUsed - 1,
+		credits: team.credits,
+		required,
+		remaining: team.credits - required,
 	};
 };
 
 /**
- * Check if team can generate a video and increment usage if allowed
+ * Check if team has sufficient credits for video generation
  * @param {string} teamId - The team ID
- * @returns {Object} { allowed: boolean, message?: string, remaining?: number }
+ * @param {string} videoType - Video type (KLING, VEO_FAST, VEO_QUALITY)
+ * @returns {Object} { allowed: boolean, message?: string, credits, required }
  */
-export const checkAndIncrementVideoUsage = async (teamId) => {
+export const checkVideoCredits = async (teamId, videoType = "KLING") => {
 	const team = await Team.findById(teamId);
 	if (!team) {
 		return { allowed: false, message: "Team not found" };
 	}
 
-	// Check if we need to reset monthly usage
-	if (shouldResetUsage(team.usagePeriodStart)) {
-		await resetMonthlyUsage(teamId);
-		// Reload team with reset values
-		const updatedTeam = await Team.findById(teamId);
-		team.videosUsedThisMonth = updatedTeam.videosUsedThisMonth;
-		team.usagePeriodStart = updatedTeam.usagePeriodStart;
-	}
+	const creditKey = `VIDEO_GENERATION_${videoType.toUpperCase()}`;
+	const required = CREDITS_REQUIRED[creditKey] || CREDITS_REQUIRED.VIDEO_GENERATION_KLING;
 
-	const videoLimit = team.videoLimit || 0;
-	const videosUsed = team.videosUsedThisMonth || 0;
-
-	// Check if team has no video access (no subscription)
-	if (videoLimit === 0) {
+	if (team.credits < required) {
 		return {
 			allowed: false,
-			message: "No active subscription. Please upgrade to generate videos.",
-			limit: 0,
-			used: videosUsed,
-			remaining: 0,
+			message: `Insufficient credits. Video generation requires ${required} credits. You have ${team.credits}.`,
+			credits: team.credits,
+			required,
 		};
 	}
-
-	// Check if limit is reached
-	if (videosUsed >= videoLimit) {
-		return {
-			allowed: false,
-			message: `Monthly video limit reached (${videoLimit} videos). Please upgrade your plan for more.`,
-			limit: videoLimit,
-			used: videosUsed,
-			remaining: 0,
-		};
-	}
-
-	// Increment usage
-	await Team.findByIdAndUpdate(teamId, {
-		$inc: { videosUsedThisMonth: 1 },
-	});
 
 	return {
 		allowed: true,
-		limit: videoLimit,
-		used: videosUsed + 1,
-		remaining: videoLimit - videosUsed - 1,
+		credits: team.credits,
+		required,
+		remaining: team.credits - required,
 	};
 };
 
 /**
- * Get current usage stats for a team
+ * Check if team has sufficient credits for TTS generation
  * @param {string} teamId - The team ID
- * @returns {Object} Usage statistics
+ * @returns {Object} { allowed: boolean, message?: string, credits, required }
  */
-export const getTeamUsageStats = async (teamId) => {
+export const checkTTSCredits = async (teamId) => {
+	const team = await Team.findById(teamId);
+	if (!team) {
+		return { allowed: false, message: "Team not found" };
+	}
+
+	const required = CREDITS_REQUIRED.TTS_GENERATION;
+	if (team.credits < required) {
+		return {
+			allowed: false,
+			message: `Insufficient credits. TTS generation requires ${required} credit. You have ${team.credits}.`,
+			credits: team.credits,
+			required,
+		};
+	}
+
+	return {
+		allowed: true,
+		credits: team.credits,
+		required,
+		remaining: team.credits - required,
+	};
+};
+
+/**
+ * Check if team has sufficient credits for influencer creation
+ * @param {string} teamId - The team ID
+ * @returns {Object} { allowed: boolean, message?: string, credits, required }
+ */
+export const checkInfluencerCredits = async (teamId) => {
+	const team = await Team.findById(teamId);
+	if (!team) {
+		return { allowed: false, message: "Team not found" };
+	}
+
+	const required = CREDITS_REQUIRED.INFLUENCER_CREATION;
+	if (team.credits < required) {
+		return {
+			allowed: false,
+			message: `Insufficient credits. Creating an influencer requires ${required} credits. You have ${team.credits}.`,
+			credits: team.credits,
+			required,
+		};
+	}
+
+	return {
+		allowed: true,
+		credits: team.credits,
+		required,
+		remaining: team.credits - required,
+	};
+};
+
+/**
+ * Get current credit balance for a team
+ * @param {string} teamId - The team ID
+ * @returns {Object|null} Credit info or null if team not found
+ */
+export const getTeamCredits = async (teamId) => {
 	const team = await Team.findById(teamId);
 	if (!team) {
 		return null;
 	}
 
-	// Check if we need to reset monthly usage
-	if (shouldResetUsage(team.usagePeriodStart)) {
-		await resetMonthlyUsage(teamId);
-		return {
-			images: {
-				used: 0,
-				limit: team.imageLimit || 0,
-				remaining: team.imageLimit || 0,
-			},
-			videos: {
-				used: 0,
-				limit: team.videoLimit || 0,
-				remaining: team.videoLimit || 0,
-			},
-			periodStart: new Date(),
-		};
-	}
-
 	return {
-		images: {
-			used: team.imagesUsedThisMonth || 0,
-			limit: team.imageLimit || 0,
-			remaining: Math.max(0, (team.imageLimit || 0) - (team.imagesUsedThisMonth || 0)),
-		},
-		videos: {
-			used: team.videosUsedThisMonth || 0,
-			limit: team.videoLimit || 0,
-			remaining: Math.max(0, (team.videoLimit || 0) - (team.videosUsedThisMonth || 0)),
-		},
-		periodStart: team.usagePeriodStart,
+		credits: team.credits,
+		teamId: team._id,
 	};
 };
+
+// Backwards compatibility aliases - these now check credits instead of incrementing usage
+export const checkAndIncrementImageUsage = checkImageCredits;
+export const checkAndIncrementVideoUsage = checkVideoCredits;
+export const getTeamUsageStats = getTeamCredits;

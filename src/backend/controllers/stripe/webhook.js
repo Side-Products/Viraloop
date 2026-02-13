@@ -2,12 +2,133 @@ import mongoose from "mongoose";
 import Subscription from "../../models/subscription";
 import Team from "../../models/team";
 import User from "../../models/user";
+import CreditHistory from "../../models/creditHistory";
 import catchAsyncErrors from "@/backend/middlewares/catchAsyncErrors";
 import getRawBody from "raw-body";
 import { getPlanFromStripePriceId, getLatestSubscriptionPlansVersion, getPlanLimitsFromStripePriceId } from "@/utils/Helpers";
+import { PRICE_PER_CREDIT, SUBSCRIPTION_CREDITS } from "@/config/constants";
 import { createOrGetCustomer } from "./paymentController";
 
 const stripe = require("stripe")(`${process.env.STRIPE_SECRET_KEY}`);
+
+/**
+ * Get credits for a subscription plan
+ * @param {string} planName - The plan name (trial, growth, pro, ultra)
+ * @returns {number} Number of credits for the plan
+ */
+const getCreditsForPlan = (planName) => {
+	if (!planName) return 0;
+	const planLower = planName.toLowerCase().replace(/\s*\(.*\)/, ""); // Remove (monthly) or (annual)
+	return SUBSCRIPTION_CREDITS[planLower] || 0;
+};
+
+/**
+ * Add credits to a team with transaction safety and idempotency
+ * @param {Object} params - Parameters for adding credits
+ * @returns {Promise<Object>} Result with creditHistory and idempotent flag
+ */
+export const addCreditsToTeam = async ({
+	teamId,
+	userId,
+	amount_total,
+	creditsToAdd,
+	type = "recurring",
+	idempotencyKey = null,
+	stripeSessionId = null,
+	stripeInvoiceId = null,
+}) => {
+	const mongoSession = await mongoose.startSession();
+
+	try {
+		mongoSession.startTransaction();
+
+		// Check idempotency
+		if (idempotencyKey) {
+			const existing = await CreditHistory.findOne({ idempotencyKey }, null, { session: mongoSession });
+			if (existing) {
+				await mongoSession.abortTransaction();
+				mongoSession.endSession();
+				console.log(`[CREDITS IDEMPOTENT] Credits already added for key: ${idempotencyKey}`);
+				return { idempotent: true, creditHistory: existing };
+			}
+		}
+
+		const team = await Team.findById(teamId).session(mongoSession);
+		if (!team) {
+			throw new Error(`Team not found: ${teamId}`);
+		}
+
+		// Create credit history record
+		const creditHistory = new CreditHistory({
+			userId,
+			teamId: team._id,
+			amount_total,
+			credits: creditsToAdd,
+			type,
+			idempotencyKey,
+			stripeSessionId,
+			stripeInvoiceId,
+		});
+		await creditHistory.save({ session: mongoSession });
+
+		// Update team credits
+		team.credits = team.credits + creditsToAdd;
+		await team.save({ session: mongoSession });
+
+		await mongoSession.commitTransaction();
+		mongoSession.endSession();
+
+		console.log(`[CREDITS] Added ${creditsToAdd} credits to team ${teamId}`);
+		return { idempotent: false, creditHistory };
+	} catch (error) {
+		await mongoSession.abortTransaction();
+		mongoSession.endSession();
+
+		// Handle duplicate key error (concurrent request)
+		if (error.code === 11000 && error.keyPattern?.idempotencyKey) {
+			console.log(`[CREDITS IDEMPOTENT] Duplicate key - credits already added for key: ${idempotencyKey}`);
+			const existing = await CreditHistory.findOne({ idempotencyKey });
+			return { idempotent: true, creditHistory: existing };
+		}
+
+		throw error;
+	}
+};
+
+/**
+ * Handle credit purchase checkout completion
+ */
+const stripeWebhookCreditsCheckoutSessionCompleted = catchAsyncErrors(async (req, res, eventData) => {
+	const session = eventData.object;
+	const idempotencyKey = `checkout_credits_${session.id}`;
+
+	try {
+		const amountPaid = session.metadata.amount / 100; // cents to dollars
+		const creditsToAdd = Math.floor(amountPaid / PRICE_PER_CREDIT);
+
+		console.log(`[CREDITS] Processing credit purchase: $${amountPaid} = ${creditsToAdd} credits`);
+
+		const result = await addCreditsToTeam({
+			teamId: session.metadata.team,
+			userId: session.client_reference_id,
+			amount_total: session.amount_total,
+			creditsToAdd,
+			type: "topup",
+			idempotencyKey,
+			stripeSessionId: session.id,
+		});
+
+		return res.status(200).json({
+			success: true,
+			creditHistory: result.creditHistory,
+			idempotent: result.idempotent,
+			creditsAdded: creditsToAdd,
+		});
+	} catch (error) {
+		console.error("[STRIPE ERROR] Credits checkout failed:", error);
+		return res.status(200).json({ success: false, error: error.message });
+	}
+});
 
 const stripeWebhook = catchAsyncErrors(async (req, res) => {
 	// Get raw body
@@ -54,6 +175,14 @@ const stripeWebhook = catchAsyncErrors(async (req, res) => {
 			success: false,
 			message: "Event not from viraloop.io",
 		});
+	}
+
+	// Handle credit purchases separately
+	if (eventData?.object?.metadata?.type === "credits") {
+		if (eventType === "checkout.session.completed") {
+			return await stripeWebhookCreditsCheckoutSessionCompleted(req, res, eventData);
+		}
+		return res.status(200).json({ success: true, message: "Unhandled credits event" });
 	}
 
 	switch (eventType) {
@@ -156,6 +285,24 @@ const stripeWebhookCheckoutSessionCompleted = catchAsyncErrors(async (req, res, 
 
 			if (teamId && stripePriceId) {
 				await updateTeamLimits(teamId, stripePriceId);
+
+				// Add credits for trial
+				const planName = getPlanFromStripePriceId(stripePriceId);
+				const creditsForPlan = getCreditsForPlan(planName);
+				if (creditsForPlan > 0) {
+					const creditIdempotencyKey = `trial_${session.id}`;
+					await addCreditsToTeam({
+						teamId,
+						userId: session.client_reference_id,
+						amount_total: session.amount_total,
+						creditsToAdd: creditsForPlan,
+						type: "topup",
+						idempotencyKey: creditIdempotencyKey,
+						stripeSessionId: session.id,
+					});
+					console.log(`[CREDITS] Added ${creditsForPlan} credits for trial purchase`);
+				}
+
 				console.log(`✅ One-time payment processed successfully for team ${teamId}`);
 				console.log("========== END CHECKOUT SESSION ==========\n");
 			} else {
@@ -216,6 +363,23 @@ const stripeWebhookCheckoutSessionCompleted = catchAsyncErrors(async (req, res, 
 		const validStatusesForLimits = ["active", "trialing"];
 		if (validStatusesForLimits.includes(stripeSubscription.status)) {
 			await updateTeamLimits(session.metadata?.team, stripeSubscription.plan.id);
+
+			// Add credits for the subscription
+			const planName = getPlanFromStripePriceId(stripeSubscription.plan.id);
+			const creditsForPlan = getCreditsForPlan(planName);
+			if (creditsForPlan > 0) {
+				const creditIdempotencyKey = `subscription_${session.subscription}_${new Date().toISOString().slice(0, 7)}`;
+				await addCreditsToTeam({
+					teamId: session.metadata.team,
+					userId: session.client_reference_id,
+					amount_total: session.amount_total,
+					creditsToAdd: creditsForPlan,
+					type: "recurring",
+					idempotencyKey: creditIdempotencyKey,
+					stripeInvoiceId: session.invoice,
+				});
+				console.log(`[CREDITS] Added ${creditsForPlan} credits for new ${planName} subscription`);
+			}
 		}
 
 		return res.status(200).json({
@@ -383,6 +547,23 @@ const stripeInvoicePaid = catchAsyncErrors(async (req, res, eventData) => {
 			old_subscription.subscriptionValidUntil = parseInt(stripeSubscription.current_period_end) * 1000;
 			// Update team limits when subscription is renewed
 			await updateTeamLimits(old_subscription.team, stripeSubscription.plan.id);
+
+			// Add credits for subscription renewal
+			const planName = getPlanFromStripePriceId(stripeSubscription.plan.id);
+			const creditsForPlan = getCreditsForPlan(planName);
+			if (creditsForPlan > 0) {
+				const creditIdempotencyKey = `invoice_${session.id}_${new Date().toISOString().slice(0, 7)}`;
+				await addCreditsToTeam({
+					teamId: old_subscription.team,
+					userId: old_subscription.user,
+					amount_total: session.total,
+					creditsToAdd: creditsForPlan,
+					type: "recurring",
+					idempotencyKey: creditIdempotencyKey,
+					stripeInvoiceId: session.id,
+				});
+				console.log(`[CREDITS] Added ${creditsForPlan} credits for ${planName} renewal`);
+			}
 		} else {
 			old_subscription.subscriptionValidUntil = Date.now();
 			// Reset team limits to 0 when subscription is no longer active

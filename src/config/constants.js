@@ -344,3 +344,31 @@ export const DAYS_OF_WEEK = [
 	{ value: 5, label: "Friday" },
 	{ value: 6, label: "Saturday" },
 ];
+
+// =====================
+// CREDIT SYSTEM
+// =====================
+
+// Credit pricing
+export const PRICE_PER_CREDIT = 0.1; // $0.10 per credit
+
+// Stripe product for credit purchases (create in Stripe dashboard)
+export const CREDITS_STRIPE_PRODUCT_ID = "prod_CREDITS_VIRALOOP"; // TODO: Replace with actual Stripe product ID
+
+// Credit costs for operations
+export const CREDITS_REQUIRED = {
+	IMAGE_GENERATION: 2,
+	VIDEO_GENERATION_KLING: 10,
+	VIDEO_GENERATION_VEO_FAST: 8,
+	VIDEO_GENERATION_VEO_QUALITY: 15,
+	TTS_GENERATION: 1,
+	INFLUENCER_CREATION: 5,
+};
+
+// Credits per subscription tier (monthly)
+export const SUBSCRIPTION_CREDITS = {
+	trial: 20, // One-time
+	growth: 200, // Monthly
+	pro: 400, // Monthly
+	ultra: 800, // Monthly
+};

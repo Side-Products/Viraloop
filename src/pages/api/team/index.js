@@ -4,6 +4,7 @@ import dbConnect from "@/lib/dbConnect";
 import { isAuthenticatedUser } from "@/backend/middlewares/auth";
 import Team from "@/backend/models/team";
 import Member from "@/backend/models/member";
+import Influencer from "@/backend/models/influencer";
 import onError from "@/backend/middlewares/errors";
 
 const handler = nc({ onError });
@@ -50,6 +51,16 @@ handler.use(isAuthenticatedUser).get(async (req, res) => {
 	// Find all teams the user is a member of
 	const members = await Member.find({ userId }).populate("teamId");
 
+	// Get team IDs for influencer count query
+	const teamIds = members.filter((m) => m.teamId).map((m) => m.teamId._id);
+
+	// Count influencers per team
+	const influencerCounts = await Influencer.aggregate([
+		{ $match: { teamId: { $in: teamIds } } },
+		{ $group: { _id: "$teamId", count: { $sum: 1 } } },
+	]);
+	const countMap = Object.fromEntries(influencerCounts.map((c) => [c._id.toString(), c.count]));
+
 	// Extract teams from member records
 	const teams = members
 		.filter((member) => member.teamId) // Filter out any null teamIds
@@ -59,6 +70,13 @@ handler.use(isAuthenticatedUser).get(async (req, res) => {
 			credits: member.teamId.credits || 0,
 			isDefault: member.teamId.isDefault || false,
 			role: member.role,
+			// Usage limits
+			influencerLimit: member.teamId.influencerLimit || 0,
+			imageLimit: member.teamId.imageLimit || 0,
+			videoLimit: member.teamId.videoLimit || 0,
+			imagesUsedThisMonth: member.teamId.imagesUsedThisMonth || 0,
+			videosUsedThisMonth: member.teamId.videosUsedThisMonth || 0,
+			influencersCount: countMap[member.teamId._id.toString()] || 0,
 		}));
 
 	res.status(200).json({

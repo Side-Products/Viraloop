@@ -1,6 +1,7 @@
 import absoluteUrl from "next-absolute-url";
 import catchAsyncErrors from "@/backend/middlewares/catchAsyncErrors";
 import User from "../../models/user";
+import { CREDITS_STRIPE_PRODUCT_ID } from "@/config/constants";
 
 const stripe = require("stripe")(`${process.env.STRIPE_SECRET_KEY}`);
 
@@ -225,6 +226,54 @@ const applyPromoCode = catchAsyncErrors(async (req, res) => {
 	}
 });
 
+// Generate stripe checkout session for credit purchases => /api/stripe/checkout-session-for-credits
+const stripeCheckoutSessionForCredits = catchAsyncErrors(async (req, res) => {
+	try {
+		const amountInCents = parseInt(req.query.amount * 100);
+
+		if (!amountInCents || amountInCents < 100) {
+			return res.status(400).json({ error: "Minimum purchase amount is $1" });
+		}
+
+		if (!req.query.teamId) {
+			return res.status(400).json({ error: "Team ID is required" });
+		}
+
+		const session = await stripe.checkout.sessions.create({
+			mode: "payment",
+			success_url: `https://viraloop.io/billing?paymentsuccess=true&type=credits`,
+			cancel_url: `https://viraloop.io/billing?paymentfailed=true`,
+			customer_email: req.user.email,
+			client_reference_id: (req.user._id || req.user.id).toString(),
+			metadata: {
+				team: req.query.teamId,
+				client_reference_id: (req.user._id || req.user.id).toString(),
+				amount: amountInCents,
+				type: "credits",
+				domain: "viraloop.io",
+				datafast_visitor_id: req.cookies?.datafast_visitor_id,
+				datafast_session_id: req.cookies?.datafast_session_id,
+			},
+			line_items: [
+				{
+					price_data: {
+						unit_amount: amountInCents,
+						currency: "usd",
+						product: CREDITS_STRIPE_PRODUCT_ID,
+					},
+					quantity: 1,
+				},
+			],
+			billing_address_collection: "auto",
+		});
+
+		return res.status(200).json(session);
+	} catch (error) {
+		console.log("stripe credit checkout error:", error);
+		return res.status(500).json({ error: error.message });
+	}
+});
+
 export {
 	stripeCheckoutSession,
 	stripeCreatePortalSession,
@@ -232,4 +281,5 @@ export {
 	findCustomer,
 	applyPromoCode,
 	createPaymentIntent,
+	stripeCheckoutSessionForCredits,
 };

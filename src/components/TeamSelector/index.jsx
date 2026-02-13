@@ -20,7 +20,7 @@ const TeamSelector = ({ teams, currentTeam, onTeamChange, isLoading, id }) => {
 				<div id={id} className="relative w-full">
 					<Listbox.Button
 						className={`
-							relative w-full cursor-pointer rounded-lg bg-white py-2.5 pl-3 pr-10 text-left
+							relative w-full cursor-pointer rounded-sm bg-white py-2 pl-3 pr-10 text-left
 							border border-neutral-200 hover:border-neutral-300 transition-all duration-200
 							focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500
 							focus-visible:ring-offset-2 focus-visible:ring-offset-white
@@ -48,7 +48,7 @@ const TeamSelector = ({ teams, currentTeam, onTeamChange, isLoading, id }) => {
 					<Transition show={open} as={Fragment} leave="transition ease-in duration-100" leaveFrom="opacity-100" leaveTo="opacity-0">
 						<Listbox.Options
 							static
-							className="absolute z-[1000] bottom-full mb-2 max-h-[280px] w-full overflow-auto rounded-lg bg-white
+							className="absolute z-[1000] bottom-full mb-2 max-h-[280px] w-full overflow-auto rounded-sm bg-white
 								border border-neutral-200 pb-1 shadow-lg focus:outline-none"
 						>
 							{/* Create New Team Button */}

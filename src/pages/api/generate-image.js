@@ -4,7 +4,9 @@ import { isAuthenticatedUser } from "@/backend/middlewares/auth";
 import onError from "@/backend/middlewares/errors";
 import { useNanoBananaProViaReplicate } from "@/backend/modules/imageGeneration";
 import Member from "@/backend/models/member";
-import { checkAndIncrementImageUsage } from "@/backend/middlewares/usageLimits";
+import { checkImageCredits } from "@/backend/middlewares/usageLimits";
+import { decrementCredits } from "@/backend/middlewares/credits";
+import { CREDITS_REQUIRED } from "@/config/constants";
 import ErrorHandler from "@/backend/utils/errorHandler";
 
 const handler = nc({ onError });
@@ -41,22 +43,22 @@ handler.use(isAuthenticatedUser).post(async (req, res) => {
 		console.log("Team ID:", teamId);
 		console.log("Team name:", member.teamId.name);
 
-		// Check team's monthly image limit
-		console.log("Checking usage limits...");
-		const usageCheck = await checkAndIncrementImageUsage(teamId);
-		console.log("Usage check result:", {
-			allowed: usageCheck.allowed,
-			used: usageCheck.used,
-			limit: usageCheck.limit,
-			remaining: usageCheck.remaining,
+		// Check team's credits
+		console.log("Checking credits...");
+		const creditCheck = await checkImageCredits(teamId);
+		console.log("Credit check result:", {
+			allowed: creditCheck.allowed,
+			credits: creditCheck.credits,
+			required: creditCheck.required,
+			remaining: creditCheck.remaining,
 		});
 
-		if (!usageCheck.allowed) {
-			console.log("ERROR: Usage limit reached");
-			const limitMessage = usageCheck.limit === 0
-				? "Unlock AI content creation tools to create stunning visuals for your influencer."
-				: `You've used all ${usageCheck.limit} images this month. Upgrade to keep creating.`;
-			throw new ErrorHandler(limitMessage, 429, "usage_limit_reached");
+		if (!creditCheck.allowed) {
+			console.log("ERROR: Insufficient credits");
+			const creditMessage = creditCheck.credits === 0
+				? "You have no credits. Please purchase credits to generate images."
+				: `Insufficient credits. You need ${creditCheck.required} credits but have ${creditCheck.credits}.`;
+			throw new ErrorHandler(creditMessage, 402, "insufficient_credits");
 		}
 
 		// Generate image using Nano Banana Pro model
@@ -74,6 +76,19 @@ handler.use(isAuthenticatedUser).post(async (req, res) => {
 		const duration = Date.now() - startTime;
 		console.log("Image generation completed in", duration, "ms");
 		console.log("Generated image URLs:", imageUrls);
+
+		// Deduct credits after successful generation
+		console.log("Deducting credits...");
+		const creditResult = await decrementCredits({
+			teamId,
+			creditsRequired: CREDITS_REQUIRED.IMAGE_GENERATION,
+			userId,
+			next: (error) => {
+				console.error("Credit deduction error:", error);
+			},
+			spendingType: "image_generation",
+		});
+		console.log("Credits deducted:", creditResult?.creditsUsed);
 		console.log("========== IMAGE GENERATION SUCCESS ==========\n");
 
 		res.status(200).json({
@@ -81,6 +96,7 @@ handler.use(isAuthenticatedUser).post(async (req, res) => {
 			imageUrl: imageUrls[0], // Return the first (and typically only) image URL
 			imageUrls, // Return all URLs in case multiple images are generated
 			message: "Image generated successfully using Nano Banana Pro",
+			creditsUsed: creditResult?.creditsUsed || CREDITS_REQUIRED.IMAGE_GENERATION,
 		});
 	} catch (error) {
 		console.log("========== IMAGE GENERATION ERROR ==========");
