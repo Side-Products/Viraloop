@@ -119,10 +119,11 @@ export default function CreateInfluencer({ isOpen, onClose, onSuccess, inline = 
 				const errorType = response.data.errorType;
 				const errorMessage = response.data.message;
 
-				if (errorType === "usage_limit_reached" || response.status === 429) {
+				// Check for credit/usage limit errors - show TrialModal
+				if (errorType === "usage_limit_reached" || errorType === "insufficient_credits" || response.status === 429 || response.status === 402) {
 					// Show the trial modal instead of just a toast
 					if (onClose) onClose(); // Close the create modal first
-					openTrialModal(errorMessage || "Upgrade your plan to continue generating images");
+					openTrialModal(errorMessage || "You need credits to generate images. Purchase credits to continue.");
 				} else {
 					toast.error(errorMessage || "Image generation failed. Using demo image instead.");
 					const placeholderUrl = `https://api.dicebear.com/7.x/personas/svg?seed=${encodeURIComponent(formData.imagePrompt)}&backgroundColor=b6e3f4,c0aede,d1d4f9`;
@@ -184,10 +185,11 @@ export default function CreateInfluencer({ isOpen, onClose, onSuccess, inline = 
 			}
 		} catch (error) {
 			console.error("Image improvement error:", error);
-			// Check if it's a usage limit error and show the trial modal
-			if (error.response?.data?.errorType === "usage_limit_reached") {
+			// Check if it's a credit/usage limit error and show the trial modal
+			const errorType = error.response?.data?.errorType;
+			if (errorType === "usage_limit_reached" || errorType === "insufficient_credits" || error.response?.status === 402) {
 				if (onClose) onClose(); // Close the create modal first
-				openTrialModal(error.response?.data?.message || "Upgrade your plan to continue generating images");
+				openTrialModal(error.response?.data?.message || "You need credits to generate images. Purchase credits to continue.");
 			} else {
 				toast.error(error.response?.data?.message || "Failed to improve image");
 			}

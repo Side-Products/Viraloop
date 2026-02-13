@@ -104,7 +104,17 @@ handler.use(isAuthenticatedUser).post(async (req, res) => {
 		console.error("Error message:", error.message);
 		console.error("Error status:", error.statusCode || error.response?.status);
 		console.error("Error type:", error.errorType);
-		console.error("Full error:", error);
+
+		// Handle insufficient credits - NEVER generate fallback, let frontend show TrialModal
+		if (error.errorType === "insufficient_credits") {
+			console.log("Returning insufficient credits error - frontend should show TrialModal");
+			return res.status(402).json({
+				success: false,
+				message: error.message,
+				errorType: "insufficient_credits",
+				showTrialModal: true,
+			});
+		}
 
 		// If it's an ErrorHandler error (our custom error), return it properly to frontend
 		if (error.statusCode && error.errorType) {
@@ -126,7 +136,7 @@ handler.use(isAuthenticatedUser).post(async (req, res) => {
 			});
 		}
 
-		// Fallback to placeholder for other errors (API failures, network issues, etc.)
+		// Fallback to placeholder ONLY for external API errors (not credit/auth issues)
 		try {
 			console.log("Attempting fallback to placeholder image...");
 			const seed = encodeURIComponent(prompt);

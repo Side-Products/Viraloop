@@ -137,12 +137,15 @@ export default function GenerateImageModal({ isOpen, onClose, influencerId, onSu
 			}
 		} catch (error) {
 			console.error("Image generation error:", error);
-			// Check if it's a usage limit error and show the trial modal
-			if (error.response?.data?.errorType === "usage_limit_reached") {
+			const errorType = error.response?.data?.errorType;
+			const errorMessage = error.response?.data?.message;
+
+			// Check if it's a usage limit or insufficient credits error and show the trial modal
+			if (errorType === "usage_limit_reached" || errorType === "insufficient_credits" || error.response?.status === 402) {
 				onClose(); // Close the generate modal first
-				openTrialModal(error.response?.data?.message || "Upgrade your plan to continue generating images");
+				openTrialModal(errorMessage || "You need credits to generate images. Purchase credits to continue.");
 			} else {
-				toast.error(error.response?.data?.message || "Failed to generate image");
+				toast.error(errorMessage || "Failed to generate image");
 			}
 		} finally {
 			setIsGenerating(false);
