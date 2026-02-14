@@ -1,4 +1,5 @@
 /** @type {import('tailwindcss').Config} */
+const flowbite = require("flowbite-react/tailwind");
 
 // Light mode primary colors (Orange theme - #ED6B2F)
 const primaryColors = {
@@ -18,7 +19,7 @@ const primaryColors = {
 module.exports = {
     darkMode: ["class"],
     mode: "jit",
-	content: ["./src/pages/**/*.{js,ts,jsx,tsx}", "./src/components/**/*.{js,ts,jsx,tsx}", "./src/layout/**/*.{js,ts,jsx,tsx}"],
+	content: ["./src/pages/**/*.{js,ts,jsx,tsx}", "./src/components/**/*.{js,ts,jsx,tsx}", "./src/layout/**/*.{js,ts,jsx,tsx}", flowbite.content()],
 	// Light mode by default (no darkMode class)
 	theme: {
     	extend: {
@@ -93,11 +94,16 @@ module.exports = {
     				'900': '#1f2937'
     			},
     			dark: {
-    				'100': '#1f2937',
-    				'200': '#374151',
-    				'300': '#4b5563',
-    				'400': '#6b7280',
-    				'500': '#9ca3af'
+    				'100': '#8E8E93',
+    				'200': '#636366',
+    				'300': '#48484A',
+    				'400': '#3A3A3C',
+    				'500': '#2C2C2E',
+    				'600': '#1C1C1E',
+    				'700': '#161618',
+    				'800': '#121214',
+    				'900': '#0E0E10',
+    				'1000': '#0A0A0C'
     			},
     			success: {
     				'50': '#f0fdf4',
@@ -206,5 +212,5 @@ module.exports = {
     		}
     	}
     },
-	plugins: [require("@tailwindcss/forms"), require("tailwindcss-animate")],
+	plugins: [flowbite.plugin(), require("@tailwindcss/forms"), require("tailwindcss-animate")],
 };

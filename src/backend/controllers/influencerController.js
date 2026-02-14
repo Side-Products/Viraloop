@@ -95,7 +95,7 @@ const generateInfluencerVideoPreview = async (influencer, imageUrl, actionPrompt
 
 // Create new influencer
 export const createInfluencer = catchAsyncErrors(async (req, res, next) => {
-	const { name, description, persona, niche, imageUrl, imagePrompt, voice, tags } = req.body;
+	const { name, description, niche, imageUrl, imagePrompt, voice, tags } = req.body;
 	const userId = req.user._id;
 
 	// Get user's current team
@@ -151,7 +151,6 @@ export const createInfluencer = catchAsyncErrors(async (req, res, next) => {
 	const influencer = await Influencer.create({
 		name,
 		description,
-		persona,
 		niche,
 		imageUrl,
 		imagePrompt,
@@ -228,7 +227,6 @@ export const getAllInfluencers = catchAsyncErrors(async (req, res, next) => {
 		query.$or = [
 			{ name: { $regex: search, $options: "i" } },
 			{ description: { $regex: search, $options: "i" } },
-			{ persona: { $regex: search, $options: "i" } },
 			{ tags: { $in: [new RegExp(search, "i")] } },
 		];
 	}
@@ -299,7 +297,7 @@ export const getInfluencer = catchAsyncErrors(async (req, res, next) => {
 // Update influencer
 export const updateInfluencer = catchAsyncErrors(async (req, res, next) => {
 	const { id } = req.query;
-	const { name, description, persona, niche, imageUrl, imagePrompt, voice, tags, platforms } = req.body;
+	const { name, description, niche, imageUrl, imagePrompt, voice, tags, platforms } = req.body;
 	const userId = req.user._id;
 
 	// Validate ObjectId
@@ -325,7 +323,6 @@ export const updateInfluencer = catchAsyncErrors(async (req, res, next) => {
 	const updateData = {};
 	if (name !== undefined) updateData.name = name;
 	if (description !== undefined) updateData.description = description;
-	if (persona !== undefined) updateData.persona = persona;
 	if (niche !== undefined) updateData.niche = niche;
 	if (imageUrl !== undefined) updateData.imageUrl = imageUrl;
 	if (imagePrompt !== undefined) updateData.imagePrompt = imagePrompt;
@@ -379,6 +376,69 @@ export const deleteInfluencer = catchAsyncErrors(async (req, res, next) => {
 	res.status(200).json({
 		success: true,
 		message: "Influencer deleted successfully",
+	});
+});
+
+// Regenerate video preview for an influencer
+export const regenerateVideoPreview = catchAsyncErrors(async (req, res, next) => {
+	const { id } = req.query;
+	const userId = req.user._id;
+
+	// Validate ObjectId
+	if (!mongoose.Types.ObjectId.isValid(id)) {
+		return next(new ErrorHandler("Invalid influencer ID", 400));
+	}
+
+	// Get user's current team
+	const member = await Member.findOne({ userId }).populate("teamId");
+	if (!member) {
+		return next(new ErrorHandler("User is not a member of any team", 400));
+	}
+
+	const teamId = member.teamId._id;
+
+	// Find influencer
+	const influencer = await Influencer.findOne({ _id: id, teamId, isActive: true });
+	if (!influencer) {
+		return next(new ErrorHandler("Influencer not found", 404));
+	}
+
+	// Check team's monthly video limit
+	const videoUsageCheck = await checkAndIncrementVideoUsage(teamId);
+	if (!videoUsageCheck.allowed) {
+		return res.status(429).json({
+			success: false,
+			message: videoUsageCheck.message,
+			limitReached: true,
+			limitType: "video",
+			usage: {
+				used: videoUsageCheck.used,
+				limit: videoUsageCheck.limit,
+				remaining: videoUsageCheck.remaining,
+			},
+		});
+	}
+
+	// Get the primary image for video generation
+	const primaryImage = await InfluencerImage.findOne({ influencerId: id, isPrimary: true });
+	const imageUrl = primaryImage?.imageUrl || influencer.imageUrl;
+
+	// Default action prompt for video generation
+	const defaultActionPrompt =
+		"The influencer is talking naturally with facial expressions, slight head movements, and engaging eye contact with the camera. Speaking in an energetic and authentic style.";
+
+	// Start video generation in the background
+	generateInfluencerVideoPreview(influencer, imageUrl, defaultActionPrompt, primaryImage?._id)
+		.then(() => {
+			console.log("Influencer video regeneration completed successfully for influencer:", influencer._id);
+		})
+		.catch((error) => {
+			console.error("Influencer video regeneration failed for influencer:", influencer._id, error);
+		});
+
+	res.status(200).json({
+		success: true,
+		message: "Video regeneration started. This may take a few minutes.",
 	});
 });
 

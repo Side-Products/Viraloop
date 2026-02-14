@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { motion } from "framer-motion";
 import { ArrowLeftIcon } from "@/components/ui/arrow-left";
 import { DeleteIcon } from "@/components/ui/delete";
-import { VolumeIcon } from "@/components/ui/volume";
+import { AudioLinesIcon } from "@/components/ui/audio-lines";
 import { CalendarDaysIcon } from "@/components/ui/calendar-days";
 import { UserIcon } from "@/components/ui/user";
 import { SparklesIcon } from "@/components/ui/sparkles";
@@ -13,6 +13,8 @@ import { PlayIcon } from "@/components/ui/play";
 import { PauseIcon } from "@/components/ui/pause";
 import { Tag } from "lucide-react";
 import { FaMale, FaFemale } from "react-icons/fa";
+import { IoRefresh } from "react-icons/io5";
+import Tooltip from "@/components/ui/Tooltip";
 import ImageGallery from "./ImageGallery";
 import GenerateImageModal from "./GenerateImageModal";
 
@@ -27,6 +29,7 @@ export default function InfluencerDetail() {
 	const [showGenerateModal, setShowGenerateModal] = useState(false);
 	const [showVideo, setShowVideo] = useState(false);
 	const [deleting, setDeleting] = useState(false);
+	const [regeneratingVideo, setRegeneratingVideo] = useState(false);
 
 	// Fetch influencer data
 	const fetchInfluencer = async () => {
@@ -143,6 +146,24 @@ export default function InfluencerDetail() {
 		}
 	};
 
+	// Handle regenerate video
+	const handleRegenerateVideo = async () => {
+		try {
+			setRegeneratingVideo(true);
+			const response = await axios.post(`/api/influencer/${id}/regenerate-video`);
+			if (response.data.success) {
+				toast.success("Video regeneration started");
+				// Refresh influencer to get updated status
+				fetchInfluencer();
+			}
+		} catch (error) {
+			console.error("Error regenerating video:", error);
+			toast.error(error.response?.data?.message || "Failed to regenerate video");
+		} finally {
+			setRegeneratingVideo(false);
+		}
+	};
+
 	// Format date
 	const formatDate = (date) => {
 		return new Date(date).toLocaleDateString("en-US", {
@@ -201,14 +222,22 @@ export default function InfluencerDetail() {
 			</div>
 
 			{/* Main Content */}
-			<div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+			<div className="flex flex-col lg:flex-row gap-6">
 				{/* Left Column - Primary Image/Video */}
-				<div className="lg:col-span-1">
-					<motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="card overflow-hidden">
+				<div className="w-full lg:w-[28%]">
+					<motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="card overflow-hidden group">
 						{/* Image/Video Container */}
 						<div className="relative aspect-[9/16] bg-light-100">
 							{showVideo && influencer.videoPreview?.status === "completed" && influencer.videoPreview.videoUrl ? (
-								<video src={influencer.videoPreview.videoUrl} autoPlay loop muted className="w-full h-full object-cover" />
+								<video
+									src={influencer.videoPreview.videoUrl}
+									poster={influencer.imageUrl}
+									autoPlay
+									loop
+									muted
+									playsInline
+									className="w-full h-full object-cover"
+								/>
 							) : (
 								<img src={influencer.imageUrl} alt={influencer.name} className="w-full h-full object-cover" />
 							)}
@@ -225,8 +254,27 @@ export default function InfluencerDetail() {
 
 							{/* Video status indicator */}
 							{influencer.videoPreview?.status === "processing" && (
-								<div className="absolute top-4 right-4 px-3 py-1.5 bg-blue-500/90 text-white text-xs rounded-full animate-pulse">
+								<div className="absolute top-4 right-4 px-2 py-0.5 bg-gradient-to-r from-blue-500/20 to-blue-600/20 text-xs text-blue-300 rounded-full border border-blue-500/20 animate-pulse">
 									Generating video...
+								</div>
+							)}
+
+							{/* Regenerate video button - shows when failed */}
+							{influencer.videoPreview?.status === "failed" && (
+								<div className="absolute bottom-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+									<Tooltip
+										message="Regenerate video preview"
+										tooltipLocation="left"
+										labelText={
+											<button
+												onClick={handleRegenerateVideo}
+												disabled={regeneratingVideo}
+												className="p-2.5 bg-black/60 hover:bg-black/80 text-white/90 hover:text-white rounded-lg backdrop-blur-sm border border-white/10 transition-all disabled:opacity-50"
+											>
+												<IoRefresh size={18} className={regeneratingVideo ? "animate-spin" : ""} />
+											</button>
+										}
+									/>
 								</div>
 							)}
 						</div>
@@ -235,7 +283,7 @@ export default function InfluencerDetail() {
 						<div className="p-4 space-y-4">
 							{/* Niche Badge */}
 							<div className="flex items-center gap-2">
-								<span className="px-3 py-1 bg-primary-100 text-primary-600 text-sm rounded-full capitalize font-medium">
+								<span className="px-3 py-1 bg-primary-100 text-primary-600 text-xs rounded-full capitalize font-medium">
 									{influencer.niche}
 								</span>
 								<div className="flex items-center gap-1 px-2 py-1 bg-light-100 rounded-full">
@@ -247,17 +295,9 @@ export default function InfluencerDetail() {
 							{/* Description */}
 							{influencer.description && <p className="text-sm text-dark-400">{influencer.description}</p>}
 
-							{/* Persona */}
-							{influencer.persona && (
-								<div>
-									<h4 className="text-xs font-semibold text-dark-300 uppercase tracking-wide mb-1">Persona</h4>
-									<p className="text-sm text-dark-400">{influencer.persona}</p>
-								</div>
-							)}
-
 							{/* Voice Info */}
 							<div className="flex items-center gap-2 text-sm text-dark-400">
-								<VolumeIcon size={16} />
+								<AudioLinesIcon size={16} />
 								<span>{influencer.voice?.name}</span>
 								{influencer.voice?.labels?.accent && <span className="text-dark-300">• {influencer.voice.labels.accent}</span>}
 							</div>
@@ -283,7 +323,7 @@ export default function InfluencerDetail() {
 				</div>
 
 				{/* Right Column - Image Gallery & More */}
-				<div className="lg:col-span-2 space-y-6">
+				<div className="w-full lg:flex-1 space-y-6">
 					{/* Image Gallery Section */}
 					<motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="card p-6">
 						<div className="flex items-center justify-between mb-4">

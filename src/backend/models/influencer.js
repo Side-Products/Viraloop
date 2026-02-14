@@ -13,12 +13,6 @@ const influencerSchema = new mongoose.Schema(
 			trim: true,
 			maxLength: [500, "Description cannot exceed 500 characters"],
 		},
-		persona: {
-			type: String,
-			trim: true,
-			maxLength: [1000, "Persona description cannot exceed 1000 characters"],
-			// e.g., "Fitness coach, motivational speaker, health enthusiast"
-		},
 		niche: {
 			type: String,
 			enum: ["fitness", "lifestyle", "tech", "beauty", "business", "education", "entertainment", "gaming", "food", "travel", "other"],

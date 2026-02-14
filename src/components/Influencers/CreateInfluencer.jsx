@@ -34,7 +34,6 @@ export default function CreateInfluencer({ isOpen, onClose, onSuccess, inline = 
 	const [formData, setFormData] = useState({
 		name: "",
 		description: "",
-		persona: "",
 		niche: "",
 		imagePrompt: "",
 		imageUrl: "",
@@ -66,7 +65,6 @@ export default function CreateInfluencer({ isOpen, onClose, onSuccess, inline = 
 			setFormData({
 				name: "",
 				description: "",
-				persona: "",
 				niche: "",
 				imagePrompt: "",
 				imageUrl: "",
@@ -235,7 +233,6 @@ export default function CreateInfluencer({ isOpen, onClose, onSuccess, inline = 
 			// Clean up form data - remove empty optional fields to avoid validation errors
 			const cleanedData = { ...formData };
 			if (!cleanedData.description?.trim()) delete cleanedData.description;
-			if (!cleanedData.persona?.trim()) delete cleanedData.persona;
 
 			const response = await axios.post("/api/influencer", cleanedData);
 
@@ -432,7 +429,11 @@ export default function CreateInfluencer({ isOpen, onClose, onSuccess, inline = 
 									<label className="block text-sm font-semibold text-dark-100">Generated Influencer</label>
 
 									<div className="bg-light-100 rounded-lg border border-light-300 overflow-hidden flex-1 flex items-center justify-center min-h-[300px]">
-										{formData.imageUrl ? (
+										{isGenerating ? (
+											<motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center p-8">
+												<LoadingMessages isActive={isGenerating} />
+											</motion.div>
+										) : formData.imageUrl ? (
 											<motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="w-full h-full p-3">
 												<div className="relative w-full h-full group">
 													<img
@@ -441,10 +442,6 @@ export default function CreateInfluencer({ isOpen, onClose, onSuccess, inline = 
 														className="w-full h-full object-contain rounded-lg border-2 border-primary-300 shadow-lg"
 													/>
 												</div>
-											</motion.div>
-										) : isGenerating ? (
-											<motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center p-8">
-												<LoadingMessages isActive={isGenerating} />
 											</motion.div>
 										) : (
 											<div className="flex flex-col items-center justify-center p-8">
@@ -578,17 +575,6 @@ export default function CreateInfluencer({ isOpen, onClose, onSuccess, inline = 
 								/>
 							</div>
 
-							<div>
-								<label className="block text-sm font-semibold text-dark-100 mb-3">Persona (Optional)</label>
-								<textarea
-									value={formData.persona}
-									onChange={(e) => setFormData((prev) => ({ ...prev, persona: e.target.value }))}
-									placeholder="e.g., Fitness coach, motivational speaker, health enthusiast"
-									className="input resize-none"
-									rows={2}
-								/>
-							</div>
-
 							{/* Preview */}
 							<div className="bg-light-100 rounded-lg p-6 border border-light-300">
 								<h4 className="text-lg font-medium text-dark-100 mb-4">Preview</h4>
@@ -654,7 +640,7 @@ export default function CreateInfluencer({ isOpen, onClose, onSuccess, inline = 
 					<button
 						onClick={handleSubmit}
 						disabled={!isStepValid() || isCreating}
-						className="btn bg-green-500 hover:bg-green-600 text-white px-8 py-2.5 disabled:opacity-40"
+						className="flex items-center justify-center btn bg-green-500 hover:bg-green-600 text-white px-8 py-2.5 disabled:opacity-40"
 					>
 						{isCreating ? (
 							<>
@@ -663,7 +649,7 @@ export default function CreateInfluencer({ isOpen, onClose, onSuccess, inline = 
 							</>
 						) : (
 							<>
-								<CheckIcon className="w-5 h-5 mr-2" />
+								<CheckIcon className="w-4 h-4 mr-2" />
 								Create Influencer
 							</>
 						)}

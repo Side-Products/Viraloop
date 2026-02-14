@@ -8,8 +8,16 @@ export default function LimitsBar() {
 	// Show skeleton loader while loading
 	if (loading || !currentTeam?._id) {
 		return (
-			<div className="pt-2 animate-pulse">
-				<div className="h-8 w-full bg-neutral-200 rounded-sm" />
+			<div className="px-3 pt-3 animate-pulse">
+				<div className="flex items-center justify-between mb-1.5">
+					<div className="h-4 w-16 bg-neutral-200 rounded" />
+					<div className="h-4 w-10 bg-neutral-200 rounded" />
+				</div>
+				<div className="w-full h-1.5 bg-neutral-200 rounded-full overflow-hidden" />
+				<div className="flex items-center justify-between mt-1.5">
+					<div className="h-4 w-14 bg-neutral-200 rounded" />
+					<div className="h-4 w-12 bg-neutral-200 rounded" />
+				</div>
 			</div>
 		);
 	}

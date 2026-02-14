@@ -48,7 +48,7 @@ export default function ImageGallery({ images, loading, onSetPrimary, onDelete, 
 
 	return (
 		<>
-			<div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+			<div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4">
 				{paginatedImages.map((image) => (
 					<motion.div
 						key={image._id}
@@ -74,7 +74,7 @@ export default function ImageGallery({ images, loading, onSetPrimary, onDelete, 
 						{/* Primary Badge */}
 						{image.isPrimary && (
 							<div className="absolute top-2 left-2 z-10">
-								<div className="px-2 py-1 bg-yellow-500 text-white text-xs rounded-full flex items-center gap-1 shadow-lg">
+								<div className="px-2 py-0.5 bg-gradient-to-r from-primary-500/20 to-primary-600/20 text-xs text-primary-300 rounded-full border border-primary-500/20 flex items-center gap-1">
 									<Star className="w-3 h-3 fill-current" />
 									<span>Primary</span>
 								</div>
@@ -102,7 +102,7 @@ export default function ImageGallery({ images, loading, onSetPrimary, onDelete, 
 										e.stopPropagation();
 										onSetPrimary(image._id);
 									}}
-									className="p-2 bg-white/20 hover:bg-yellow-500 rounded-full text-white transition-colors"
+									className="p-2 bg-white/20 hover:bg-primary-500 rounded-full text-white transition-colors"
 									title="Set as Primary"
 								>
 									<Star className="w-5 h-5" />
@@ -214,7 +214,7 @@ export default function ImageGallery({ images, loading, onSetPrimary, onDelete, 
 								<div className="flex items-center justify-between mb-2">
 									<div className="flex items-center gap-2">
 										{selectedImage.isPrimary && (
-											<span className="px-2 py-1 bg-yellow-500 text-white text-xs rounded-full flex items-center gap-1">
+											<span className="px-2 py-0.5 bg-gradient-to-r from-primary-500/20 to-primary-600/20 text-xs text-primary-300 rounded-full border border-primary-500/20 flex items-center gap-1">
 												<Star className="w-3 h-3 fill-current" />
 												Primary
 											</span>
@@ -228,7 +228,7 @@ export default function ImageGallery({ images, loading, onSetPrimary, onDelete, 
 													onSetPrimary(selectedImage._id);
 													setSelectedImage(null);
 												}}
-												className="px-3 py-1.5 bg-yellow-500/80 hover:bg-yellow-500 rounded-lg text-white text-sm transition-colors flex items-center gap-1"
+												className="px-3 py-1.5 bg-primary-500/80 hover:bg-primary-500 rounded-lg text-white text-sm transition-colors flex items-center gap-1"
 											>
 												<Star className="w-4 h-4" />
 												Set Primary

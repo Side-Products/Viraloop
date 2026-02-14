@@ -3,7 +3,7 @@ import { useRouter } from "next/router";
 import { motion } from "framer-motion";
 import { DeleteIcon } from "@/components/ui/delete";
 import { PlayIcon } from "@/components/ui/play";
-import { VolumeIcon } from "@/components/ui/volume";
+import { AudioLinesIcon } from "@/components/ui/audio-lines";
 import { CalendarDaysIcon } from "@/components/ui/calendar-days";
 import { PauseIcon } from "@/components/ui/pause";
 import { FaMale, FaFemale } from "react-icons/fa";
@@ -89,7 +89,7 @@ export default function InfluencerCard({ influencer, viewMode = "grid", onDelete
 							</div>
 						</div>
 
-						<p className="text-sm text-dark-400 truncate mb-2">{influencer.description || "No description"}</p>
+						{influencer.description && <p className="text-sm text-dark-400 truncate mb-2">{influencer.description}</p>}
 
 						<div className="flex items-center gap-4 text-xs text-dark-400">
 							<div className="flex items-center gap-1">
@@ -121,7 +121,15 @@ export default function InfluencerCard({ influencer, viewMode = "grid", onDelete
 			{/* Influencer Image/Video - 9:16 Aspect Ratio */}
 			<div className="relative aspect-[9/16] overflow-hidden">
 				{showVideo && influencer.videoPreview?.status === "completed" && influencer.videoPreview.videoUrl ? (
-					<video src={influencer.videoPreview.videoUrl} autoPlay loop muted className="w-full h-full object-cover" />
+					<video
+						src={influencer.videoPreview.videoUrl}
+						poster={influencer.imageUrl}
+						autoPlay
+						loop
+						muted
+						playsInline
+						className="w-full h-full object-cover"
+					/>
 				) : (
 					<img
 						src={influencer.imageUrl}
@@ -186,11 +194,11 @@ export default function InfluencerCard({ influencer, viewMode = "grid", onDelete
 							<div className="flex items-start justify-between gap-2">
 								<h3 className="text-lg font-semibold text-white truncate">{influencer.name}</h3>
 							</div>
-							<p className="text-xs text-neutral-300 line-clamp-2">
-								{(influencer.description || "No description provided").length > 15
-									? (influencer.description || "No description provided").slice(0, 15) + "..."
-									: influencer.description || "No description provided"}
-							</p>
+							{influencer.description && (
+								<p className="text-xs text-neutral-300 line-clamp-2">
+									{influencer.description.length > 15 ? influencer.description.slice(0, 15) + "..." : influencer.description}
+								</p>
+							)}
 						</div>
 						{/* Niche Badge */}
 						{influencer.niche && (
@@ -222,7 +230,7 @@ export default function InfluencerCard({ influencer, viewMode = "grid", onDelete
 					<div className="flex items-center justify-between text-xs text-neutral-300 pt-3 border-t border-white/20">
 						{/* Voice Info */}
 						<div className="flex items-center gap-2 text-neutral-300">
-							<VolumeIcon size={16} />
+							<AudioLinesIcon size={16} />
 							<span className="text-xs text-neutral-300">{influencer.voice?.name}</span>
 							{influencer.voice?.labels?.accent && (
 								<span className="text-[11px] text-neutral-400 capitalize">• {influencer.voice.labels.accent}</span>

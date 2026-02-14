@@ -1,34 +1,5 @@
 import Replicate from "replicate";
-import aws from "aws-sdk";
-
-const getCurrentTimestamp = () => {
-	return Date.now();
-};
-
-const uploadVideoToAWS_S3 = async function (fileBuffer, fileName) {
-	const s3 = new aws.S3({
-		accessKeyId: process.env.SES_S3_AWS_ACCESS_KEY_ID,
-		secretAccessKey: process.env.SES_S3_AWS_SECRET_ACCESS_KEY,
-	});
-
-	const params = {
-		Bucket: process.env.AWS_BUCKET_NAME || "viraloop-assets",
-		Key: `videos/${fileName}`,
-		Body: fileBuffer,
-		ContentType: "video/mp4",
-	};
-
-	return new Promise((resolve, reject) => {
-		s3.upload(params, (error, data) => {
-			if (error) {
-				console.log("Error uploading video to S3", error);
-				reject(error);
-			} else {
-				resolve(data);
-			}
-		});
-	});
-};
+import { uploadVideo } from "@/backend/services/wasabiUploadService";
 
 /**
  * Generate video using Kling v2.1 model via Replicate
@@ -91,23 +62,21 @@ export const useKlingViaReplicate = async ({ imageUrl, prompt }) => {
 		const buffer = Buffer.from(arrayBuffer);
 		console.log("Video buffer size:", buffer.length, "bytes");
 
-		// Upload to S3
-		const fileName = `influencer_video_${getCurrentTimestamp()}.mp4`;
-		console.log("Uploading to S3:", { fileName, bucket: process.env.AWS_BUCKET_NAME });
+		// Upload to Wasabi
+		console.log("Uploading to Wasabi...");
 
-		const uploadedVideo = await uploadVideoToAWS_S3(buffer, fileName);
-		console.log("S3 upload response:", uploadedVideo);
+		const uploadResult = await uploadVideo(buffer, {
+			originalName: "influencer_video.mp4",
+		});
+		console.log("Wasabi upload response:", uploadResult);
 
-		// Construct the S3 URL
-		const bucketName = process.env.AWS_BUCKET_NAME || "viraloop-assets";
-		const s3Url = `https://${bucketName}.s3.amazonaws.com/videos/${fileName}`;
-		console.log("Final S3 URL:", s3Url);
+		console.log("Final Wasabi URL:", uploadResult.publicUrl);
 		console.log("--- useKlingViaReplicate SUCCESS ---\n");
 
 		return {
-			videoUrl: s3Url,
-			key: `videos/${fileName}`,
-			publicUrl: s3Url,
+			videoUrl: uploadResult.publicUrl,
+			key: uploadResult.key,
+			publicUrl: uploadResult.publicUrl,
 		};
 	} catch (error) {
 		console.error("--- useKlingViaReplicate ERROR ---");

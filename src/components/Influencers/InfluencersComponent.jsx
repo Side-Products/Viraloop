@@ -81,7 +81,7 @@ export default function InfluencersComponent() {
 		toast.success("Influencer created successfully!");
 	};
 
-	// Handle pagination
+// Handle pagination
 	const handlePageChange = (page) => {
 		fetchInfluencers(page);
 	};

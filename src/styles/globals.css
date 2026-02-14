@@ -251,3 +251,24 @@ a {
     @apply bg-background text-foreground;
 	}
 }
+
+/* Flowbite Tooltip Styles */
+.flowbite-tooltip {
+	@apply bg-dark-700 border border-dark-400;
+}
+
+.flowbite-tooltip-bottom [data-testid="flowbite-tooltip-arrow"] {
+	@apply bg-dark-700 border-t border-l border-dark-400;
+}
+
+.flowbite-tooltip-top [data-testid="flowbite-tooltip-arrow"] {
+	@apply bg-dark-700 border-b border-r border-dark-400;
+}
+
+.flowbite-tooltip-left [data-testid="flowbite-tooltip-arrow"] {
+	@apply bg-dark-700 border-t border-r border-dark-400;
+}
+
+.flowbite-tooltip-right [data-testid="flowbite-tooltip-arrow"] {
+	@apply bg-dark-700 border-b border-l border-dark-400;
+}

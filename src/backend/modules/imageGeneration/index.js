@@ -1,33 +1,4 @@
-import aws from "aws-sdk";
-
-const getCurrentTimestamp = () => {
-	return Date.now();
-};
-
-const uploadFileToAWS_S3 = async function (fileBuffer, fileName, contentType = "image/jpeg") {
-	const s3 = new aws.S3({
-		accessKeyId: process.env.SES_S3_AWS_ACCESS_KEY_ID,
-		secretAccessKey: process.env.SES_S3_AWS_SECRET_ACCESS_KEY,
-	});
-
-	const params = {
-		Bucket: process.env.AWS_BUCKET_NAME || "viraloop-assets",
-		Key: fileName,
-		Body: fileBuffer,
-		ContentType: contentType,
-	};
-
-	return new Promise((resolve, reject) => {
-		s3.upload(params, (error, data) => {
-			if (error) {
-				console.log("Error uploading file to S3", error);
-				reject(error);
-			} else {
-				resolve(data);
-			}
-		});
-	});
-};
+import { uploadInfluencerImage } from "@/backend/services/wasabiUploadService";
 
 /**
  * Poll for task completion from Kie.ai API
@@ -184,21 +155,18 @@ export const useNanoBananaProViaReplicate = async ({ textPrompt, dimension = "9:
 		const buffer = Buffer.from(arrayBuffer);
 		console.log("Image buffer size:", buffer.length, "bytes");
 
-		// Step 5: Upload to S3
-		const fileName = `influencer_${getCurrentTimestamp()}.${outputFormat}`;
-		const contentType = outputFormat === "png" ? "image/png" : "image/jpeg";
-		console.log("Uploading to S3:", { fileName, contentType, bucket: process.env.AWS_BUCKET_NAME });
+		// Step 5: Upload to Wasabi
+		console.log("Uploading to Wasabi...");
 
-		const uploadedImage = await uploadFileToAWS_S3(buffer, fileName, contentType);
-		console.log("S3 upload response:", uploadedImage);
+		const uploadResult = await uploadInfluencerImage(buffer, {
+			originalName: `image.${outputFormat}`,
+		});
+		console.log("Wasabi upload response:", uploadResult);
 
-		// Construct the S3 URL
-		const bucketName = process.env.AWS_BUCKET_NAME || "viraloop-assets";
-		const s3Url = `https://${bucketName}.s3.amazonaws.com/${uploadedImage.Key}`;
-		console.log("Final S3 URL:", s3Url);
+		console.log("Final Wasabi URL:", uploadResult.publicUrl);
 		console.log("--- useNanoBananaProViaKieAI SUCCESS ---\n");
 
-		return [s3Url];
+		return [uploadResult.publicUrl];
 	} catch (error) {
 		console.error("--- useNanoBananaProViaKieAI ERROR ---");
 		console.error("Error name:", error.name);

@@ -13,6 +13,8 @@ const Layout = ({ children }) => {
 			router.pathname.startsWith("/dashboard") ||
 			router.pathname.startsWith("/influencers") ||
 			router.pathname.startsWith("/posts") ||
+			router.pathname.startsWith("/loops") ||
+			router.pathname.startsWith("/calendar") ||
 			router.pathname.startsWith("/schedule") ||
 			router.pathname.startsWith("/accounts") ||
 			router.pathname.startsWith("/analytics") ||

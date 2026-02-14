@@ -29,6 +29,11 @@ function TeamContextProvider({ children }) {
 	// Fetch teams when session is available
 	useEffect(() => {
 		const fetchTeams = async () => {
+			// Keep loading true while session is still loading
+			if (status === "loading") {
+				return;
+			}
+
 			if (status !== "authenticated") {
 				setLoading(false);
 				return;
